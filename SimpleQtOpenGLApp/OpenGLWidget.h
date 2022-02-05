@@ -2,10 +2,9 @@
 
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
-
-QT_BEGIN_NAMESPACE
-class QOpenGLShaderProgram;
-QT_END_NAMESPACE
+#include <QOpenGLBuffer>
+#include <QOpenGLVertexArrayObject>
+#include <QOpenGLShaderProgram>
 
 
 class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions
@@ -29,6 +28,9 @@ protected:
 	void paintGL() override;
 
 private:
-	QOpenGLShaderProgram* m_shaderProgram;
+	QOpenGLShaderProgram m_shaderProgram;
+
+	QOpenGLBuffer m_vbo; //顶点缓存对象（Vertex Buffer Object）
+	QOpenGLVertexArrayObject m_vao; //顶点数组对象（Vertex Array Object）
 };
 
