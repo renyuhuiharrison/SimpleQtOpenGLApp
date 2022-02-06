@@ -2,7 +2,6 @@
 
 #include "camera.h"
 
-// constructor with vectors
 Camera::Camera(QVector3D position,QVector3D up ,
        float yaw , float pitch ):
     m_position(position),
@@ -30,33 +29,40 @@ Camera::Camera(float posX, float posY, float posZ, float upX, float upY, float u
        updateCameraVectors();
    }
 
- // returns the view matrix calculated using Euler Angles and the LookAt Matrix
 QMatrix4x4 Camera::GetViewMatrix()
-   {
-    QMatrix4x4 result;
-    result.lookAt(m_position, m_position + m_front, m_up);
-    return result;
-   }
+{
+	QMatrix4x4 result;
+	result.lookAt(m_position, m_position + m_front, m_up);
+	return result;
+}
 
 
-void Camera::move(Camera_Movement direction, float deltaTime)
+void Camera::move(Camera::Camera_Movement direction, float deltaTime)
 {
     float velocity = m_speed * deltaTime;
-    if (direction == FORWARD)
+    if (direction == Camera::FORWARD)
         m_position += m_front * velocity;
-    if (direction == BACKWARD)
+    if (direction == Camera::BACKWARD)
         m_position -= m_front * velocity;
-    if (direction == LEFT)
+    if (direction == Camera::LEFT)
         m_position += QVector3D::crossProduct(m_front, m_up).normalized() * velocity;
-    if (direction == RIGHT)
+    if (direction == Camera::RIGHT)
         m_position -= QVector3D::crossProduct(m_front, m_up).normalized() * velocity;
-    if (direction == UP)
+    if (direction == Camera::UP)
         m_position += m_up * velocity;
-    if (direction == DOWN)
+    if (direction == Camera::DOWN)
         m_position -= m_up * velocity;
 }
 
-// processes input received from a mouse input system. Expects the offset value in both the x and y direction.
+
+void Camera::pan(float xoffset, float yoffset, float deltaTime)
+{
+	float velocity = m_speed * deltaTime;
+
+    m_position.setX(m_position.x() + xoffset * velocity);
+	m_position.setY(m_position.y() + yoffset * velocity);
+}
+
 void Camera::rotate(float xoffset, float yoffset, bool constrainPitch)
 {
     xoffset *= m_sensitivity;

@@ -145,32 +145,32 @@ void OpenGLWidget::keyPressEvent(QKeyEvent* event)
 	switch (event->key()) {
 	case Qt::Key_W:
 	{
-		m_camera->move(FORWARD, m_deltaTime);
+		m_camera->move(Camera::FORWARD, m_deltaTime);
 		break;
 	}
 	case Qt::Key_S:
 	{
-		m_camera->move(BACKWARD, m_deltaTime);
+		m_camera->move(Camera::BACKWARD, m_deltaTime);
 		break;
 	}
 	case Qt::Key_D:
 	{
-		m_camera->move(LEFT, m_deltaTime);
+		m_camera->move(Camera::LEFT, m_deltaTime);
 		break;
 	}
 	case Qt::Key_A:
 	{
-		m_camera->move(RIGHT, m_deltaTime);
+		m_camera->move(Camera::RIGHT, m_deltaTime);
 		break;
 	}
 	case Qt::Key_Up:
 	{
-		m_camera->move(UP, m_deltaTime);
+		m_camera->move(Camera::UP, m_deltaTime);
 		break;
 	}
 	case Qt::Key_Down:
 	{
-		m_camera->move(DOWN, m_deltaTime);
+		m_camera->move(Camera::DOWN, m_deltaTime);
 		break;
 	}
 	default:
@@ -195,7 +195,6 @@ void OpenGLWidget::mousePressEvent(QMouseEvent* event)
 
 		m_btnPressStatus = ButtonLeft;
 
-		update();
 	}
 	else if (Qt::RightButton == event->button())
 	{
@@ -204,18 +203,26 @@ void OpenGLWidget::mousePressEvent(QMouseEvent* event)
 
 		m_btnPressStatus = ButtonRight;
 
-		update();
+	}
+	else if (Qt::MiddleButton == event->button())
+	{
+		m_lastX = event->pos().x();
+		m_lastY = event->pos().y();
+
+		m_btnPressStatus = ButtonMiddle;
+
 	}
 }
 
 void OpenGLWidget::mouseReleaseEvent(QMouseEvent* event)
 {
 	Q_UNUSED(event);
+	m_btnPressStatus = ButtonNone;
 }
 
 void OpenGLWidget::mouseMoveEvent(QMouseEvent* event)
 {
-	if (ButtonLeft == m_btnPressStatus)
+	if (ButtonLeft == m_btnPressStatus) //旋转相机视角
 	{
 		int xpos = event->pos().x();
 		int ypos = event->pos().y();
@@ -229,7 +236,7 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent* event)
 		}
 
 		int xoffset = m_lastX - xpos;
-		int yoffset = ypos - m_lastY;// reversed since y-coordinates go from bottom to top
+		int yoffset = ypos - m_lastY;
 
 		m_lastX = xpos;
 		m_lastY = ypos;
@@ -238,9 +245,44 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent* event)
 		
 		update();
 	}
-	else if (ButtonRight == m_btnPressStatus)
+	else if (ButtonRight == m_btnPressStatus) //缩放相机视角
 	{
+		int ypos = event->pos().y();
+		int yoffset = ypos - m_lastY;
 
+		if (yoffset < 0)
+		{
+			m_camera->move(Camera::FORWARD, m_deltaTime);
+		}
+		else
+		{
+			m_camera->move(Camera::BACKWARD, m_deltaTime);
+		}
+
+		update();
+	}
+	else if (ButtonMiddle == m_btnPressStatus) //平移相机视角
+	{
+		int xpos = event->pos().x();
+		int ypos = event->pos().y();
+
+		if (m_bFirstMouse)
+		{
+			m_lastX = xpos;
+			m_lastY = ypos;
+			m_bFirstMouse = false;
+			return;
+		}
+
+		int xoffset = m_lastX - xpos;
+		int yoffset = ypos - m_lastY;
+
+		m_lastX = xpos;
+		m_lastY = ypos;
+
+		m_camera->pan(xoffset, yoffset, m_deltaTime);
+
+		update();
 	}
 }
 
@@ -249,11 +291,11 @@ void OpenGLWidget::wheelEvent(QWheelEvent* event)
 	QPoint offset = event->angleDelta();
 	if (offset.y() > 0)
 	{
-		m_camera->move(FORWARD, m_deltaTime);
+		m_camera->move(Camera::FORWARD, m_deltaTime);
 	}
 	else
 	{
-		m_camera->move(BACKWARD, m_deltaTime);
+		m_camera->move(Camera::BACKWARD, m_deltaTime);
 	}
 	update();
 }

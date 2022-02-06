@@ -61,13 +61,9 @@ private:
 	float	m_lastX;
 	float	m_lastY;
 	bool	m_bFirstMouse;
-	bool	m_bLButtonPressed;
-	bool	m_bRButtonPressed;
 
 	ButtonPressStatus m_btnPressStatus;
 
-	int		m_frame;
 	float	m_deltaTime;  // time between current frame and last frame
-	float	m_lastFrame;
 };
 
