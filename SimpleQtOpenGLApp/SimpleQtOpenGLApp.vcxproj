@@ -100,7 +100,9 @@
     </QtMoc>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Vertex.cpp" />
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="Vertex.h" />
     <QtRcc Include="SimpleQtOpenGLApp.qrc" />
     <QtUic Include="SimpleQtOpenGLApp.ui" />
