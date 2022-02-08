@@ -246,12 +246,12 @@ void OpenGLWidget::keyPressEvent(QKeyEvent* event)
 		m_camera->move(Camera::RIGHT, m_deltaTime);
 		break;
 	}
-	case Qt::Key_Up:
+	case Qt::Key_Q:
 	{
 		m_camera->move(Camera::UP, m_deltaTime);
 		break;
 	}
-	case Qt::Key_Down:
+	case Qt::Key_E:
 	{
 		m_camera->move(Camera::DOWN, m_deltaTime);
 		break;
