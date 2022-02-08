@@ -1,14 +1,16 @@
 #pragma once
 
 #include <QOpenGLWidget>
-#include <QOpenGLFunctions>
+#include <QOpenGLFunctions_3_3_Core>
 #include <QOpenGLBuffer>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLShaderProgram>
+#include <QVector>
 
 class Camera;
+class Mesh;
 
-class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions
+class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core
 {
     Q_OBJECT
 public:
@@ -19,13 +21,14 @@ public:
 		ButtonNone = 0,  //没有按下任何键
 		ButtonRight,
 		ButtonLeft,
-		ButtonMiddle,
-		ButtonRightLeft  //左键和右键同时按下
+		ButtonMiddle
 	};
 
 public:
     explicit OpenGLWidget(QWidget*parent = nullptr);
     ~OpenGLWidget();
+
+	void displayTriangle();
 
 protected:
 	//Sets up the OpenGL resources and state. 
@@ -40,12 +43,17 @@ protected:
 	//Renders the OpenGL scene. Gets called whenever the widget needs to be updated
 	void paintGL() Q_DECL_OVERRIDE;
 
+	bool createShader();
+
 	void keyPressEvent(QKeyEvent* event) Q_DECL_OVERRIDE;
 	void keyReleaseEvent(QKeyEvent* event) Q_DECL_OVERRIDE;
 	void mousePressEvent(QMouseEvent* event) Q_DECL_OVERRIDE;
 	void mouseReleaseEvent(QMouseEvent* event) Q_DECL_OVERRIDE;
 	void mouseMoveEvent(QMouseEvent* event) Q_DECL_OVERRIDE;
 	void wheelEvent(QWheelEvent* event) Q_DECL_OVERRIDE;
+
+private:
+	void printContextInformation();
 
 private:
 
@@ -57,6 +65,11 @@ private:
 	QOpenGLBuffer m_vbo; //顶点缓存对象（Vertex Buffer Object）
 	QOpenGLVertexArrayObject m_vao; //顶点数组对象（Vertex Array Object）
 
+	GLuint m_vbo_vertex;
+	GLuint m_VAO;
+
+	//QVector<GLfloat> m_vertices;
+
 	Camera* m_camera;
 	float	m_lastX;
 	float	m_lastY;
@@ -65,5 +78,8 @@ private:
 	ButtonPressStatus m_btnPressStatus;
 
 	float	m_deltaTime;  // time between current frame and last frame
+	bool	m_bLoadMesh;
+
+	QVector<Mesh*> m_meshes;
 };
 

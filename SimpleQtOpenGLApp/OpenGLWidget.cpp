@@ -7,12 +7,19 @@
 #include "OpenGLWidget.h"
 #include "Vertex.h"
 #include "Camera.h"
+#include "Mesh.h"
 
-//创建一个彩色三角形
-static const Vertex vertices[] = {
-  Vertex(QVector3D(0.00f,  0.75f, 1.0f), QVector3D(1.0f, 0.0f, 0.0f)),
-  Vertex(QVector3D(0.75f, -0.75f, 1.0f), QVector3D(0.0f, 1.0f, 0.0f)),
-  Vertex(QVector3D(-0.75f, -0.75f, 1.0f), QVector3D(0.0f, 0.0f, 1.0f))
+//彩色三角形
+static const Vertex tri_vertices[] = {
+	Vertex(QVector3D(0.00f,  0.75f, 1.0f), QVector3D(1.0f, 0.0f, 0.0f)),
+	Vertex(QVector3D(0.75f, -0.75f, 1.0f), QVector3D(0.0f, 1.0f, 0.0f)),
+	Vertex(QVector3D(-0.75f, -0.75f, 1.0f), QVector3D(0.0f, 0.0f, 1.0f))
+};
+
+static const Vertex tri_vertices_2[] = {
+	Vertex(QVector3D(0.0f, 0.0f, -1.0f), QVector3D(1.0f, 0.0f, 0.0f)),
+	Vertex(QVector3D(0.0f, 1.0f, -1.0f), QVector3D(0.0f, 1.0f, 0.0f)),
+	Vertex(QVector3D(1.0f, 1.0f, -1.0f), QVector3D(0.0f, 0.0f, 1.0f))
 };
 
 OpenGLWidget::OpenGLWidget(QWidget*parent) : 
@@ -27,8 +34,10 @@ OpenGLWidget::OpenGLWidget(QWidget*parent) :
 	m_lastX = width() / 2.0f;
 	m_lastY = height() / 2.0f;
 	m_bFirstMouse = true;
+	m_bLoadMesh = false;
 
 	m_btnPressStatus = OpenGLWidget::ButtonNone;
+
 
 	setFocusPolicy(Qt::StrongFocus);//用于响应键盘事件
 }
@@ -47,10 +56,48 @@ OpenGLWidget::~OpenGLWidget()
 
 
 
+void OpenGLWidget::displayTriangle()
+{
+	m_bLoadMesh = true;
+
+	m_shaderProgram.bind();
+
+	Mesh* mesh = new Mesh();
+
+	for (int i = 0; i < 3; i++)
+	{
+		mesh->addVertex(tri_vertices[i]);
+	}
+
+	m_vbo.bind();
+	{
+		m_vbo.allocate(mesh->getVertices().constData(), mesh->getVertices().length() * sizeof(Vertex));
+	}
+	m_vbo.release();
+
+	m_meshes.push_back(mesh);
+
+	m_shaderProgram.release();
+
+
+#if 0
+	m_vbo.bind();
+	{
+		m_vbo.allocate(tri_vertices, sizeof(tri_vertices));
+	}
+	m_vbo.release();
+#endif
+}
+
 void OpenGLWidget::initializeGL()
 {
-    //为当前上下文初始化提供OpenGL函数解析
     this->initializeOpenGLFunctions();    
+
+	printContextInformation();
+
+	if (!createShader()) {
+		return;
+	}
 
 	//设置清屏颜色
 	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
@@ -58,37 +105,15 @@ void OpenGLWidget::initializeGL()
 	//清空颜色缓冲区
 	glClear(GL_COLOR_BUFFER_BIT);
 
+	glEnable(GL_DEPTH_TEST);
+
 	m_vao.create();
 	m_vao.bind();
-	
+
 	m_vbo.create();
 	m_vbo.bind();
 
-	bool bSuccess = m_shaderProgram.create();
-	if (!bSuccess) {
-		qDebug() << "shaderProgram create failed!" << m_shaderProgram.log();
-		return;
-	}
-
-	bSuccess = m_shaderProgram.addShaderFromSourceFile(QOpenGLShader::Vertex, "vertexShader.vert");
-	if (!bSuccess) {
-		qDebug() << "shaderProgram addShaderFromSourceFile failed!" << m_shaderProgram.log();
-		return;
-	}
-
-	bSuccess = m_shaderProgram.addShaderFromSourceFile(QOpenGLShader::Fragment, "fragmentShader.frag");
-	if (!bSuccess) {
-		qDebug() << "shaderProgram addShaderFromSourceFile failed!" << m_shaderProgram.log();
-		return;
-	}
-
-	bSuccess = m_shaderProgram.link();
-	if (!bSuccess) {
-		qDebug() << "shaderProgram link failed!" << m_shaderProgram.log();
-		return;
-	}
-
-	m_vbo.allocate(vertices, sizeof(vertices));
+	m_vbo.allocate(nullptr, 0);
 
 	m_shaderProgram.enableAttributeArray(0);
 	m_shaderProgram.enableAttributeArray(1);
@@ -121,6 +146,9 @@ void OpenGLWidget::resizeGL(int w, int h)
 
 void OpenGLWidget::paintGL()
 {
+	if (!m_bLoadMesh)
+		return;
+
 	m_shaderProgram.bind();
 	{
 		QMatrix4x4 modelMatrix;
@@ -135,9 +163,64 @@ void OpenGLWidget::paintGL()
 		m_shaderProgram.setUniformValue("projMatrix", projMatrix);
 
 		QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
-		glDrawArrays(GL_TRIANGLES, 0, sizeof(vertices) / sizeof(vertices[0]));
+		//glDrawArrays(GL_TRIANGLES, 0, sizeof(tri_vertices) / sizeof(tri_vertices[0]));
+
+#if 0
+		glGenVertexArrays(1, &m_VAO);
+		glGenBuffers(1, &m_vbo_vertex);
+		glBindVertexArray(m_VAO);
+		glBindBuffer(GL_ARRAY_BUFFER, m_vbo_vertex);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(tri_vertices) / sizeof(tri_vertices[0]), &tri_vertices[0], GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, Vertex::getStride(), (void*)Vertex::getPositionOffset());
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, Vertex::getStride(), (void*)Vertex::getColorOffset());
+		glEnableVertexAttribArray(0);
+		glEnableVertexAttribArray(1);
+
+
+		glBindVertexArray(m_VAO);
+		{
+			glDrawArrays(GL_TRIANGLES, 0, sizeof(tri_vertices) / sizeof(tri_vertices[0]));
+		}
+		glBindVertexArray(0);
+#endif
+
+		for (int i = 0; i < m_meshes.size(); i++)
+		{
+			m_meshes[i]->draw(&m_shaderProgram);
+		}
+		 
+		
 	}
 	m_shaderProgram.release();
+}
+
+bool OpenGLWidget::createShader()
+{
+	bool bSuccess = m_shaderProgram.create();
+	if (!bSuccess) {
+		qDebug() << "shaderProgram create failed!" << m_shaderProgram.log();
+		return false;
+	}
+
+	bSuccess = m_shaderProgram.addShaderFromSourceFile(QOpenGLShader::Vertex, "vertexShader.vert");
+	if (!bSuccess) {
+		qDebug() << "shaderProgram addShaderFromSourceFile failed!" << m_shaderProgram.log();
+		return false;
+	}
+
+	bSuccess = m_shaderProgram.addShaderFromSourceFile(QOpenGLShader::Fragment, "fragmentShader.frag");
+	if (!bSuccess) {
+		qDebug() << "shaderProgram addShaderFromSourceFile failed!" << m_shaderProgram.log();
+		return false;
+	}
+
+	bSuccess = m_shaderProgram.link();
+	if (!bSuccess) {
+		qDebug() << "shaderProgram link failed!" << m_shaderProgram.log();
+		return false;
+	}
+
+	return bSuccess;
 }
 
 void OpenGLWidget::keyPressEvent(QKeyEvent* event)
@@ -298,5 +381,29 @@ void OpenGLWidget::wheelEvent(QWheelEvent* event)
 		m_camera->move(Camera::BACKWARD, m_deltaTime);
 	}
 	update();
+}
+
+void OpenGLWidget::printContextInformation()
+{
+	QString glType;
+	QString glVersion;
+	QString glVendor;
+	QString glProfile;
+
+	glType = (context()->isOpenGLES()) ? "OpenGL ES" : "OpenGL";
+	glVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+	glVendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
+
+#define CASE(c) case QSurfaceFormat::c: glProfile = #c; break
+	switch (format().profile())
+	{
+		CASE(NoProfile);
+		CASE(CoreProfile);
+		CASE(CompatibilityProfile);
+	}
+#undef CASE
+	qDebug() << "Vender:" << glVendor;
+	qDebug() << qPrintable(glType) << qPrintable(glVersion) << "(" << qPrintable(glProfile) << ")";
+
 }
 

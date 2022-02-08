@@ -101,8 +101,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Vertex.cpp" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Mesh.h" />
     <ClInclude Include="Vertex.h" />
     <QtRcc Include="SimpleQtOpenGLApp.qrc" />
     <QtUic Include="SimpleQtOpenGLApp.ui" />

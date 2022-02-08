@@ -11,5 +11,9 @@ public:
     SimpleQtOpenGLApp(QWidget *parent = Q_NULLPTR);
 
 private:
+    void initActions();
+
+
+private:
     Ui::SimpleQtOpenGLAppClass ui;
 };
