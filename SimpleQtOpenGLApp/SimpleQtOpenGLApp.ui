@@ -34,6 +34,7 @@
      <string>测试</string>
     </property>
     <addaction name="actionDisplayTriangle"/>
+    <addaction name="actionImportModel"/>
    </widget>
    <addaction name="menu"/>
   </widget>
@@ -49,6 +50,11 @@
   <action name="actionDisplayTriangle">
    <property name="text">
     <string>显示三角形</string>
+   </property>
+  </action>
+  <action name="actionImportModel">
+   <property name="text">
+    <string>导入模型</string>
    </property>
   </action>
  </widget>

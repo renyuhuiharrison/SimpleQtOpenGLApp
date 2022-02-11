@@ -12,8 +12,8 @@ const float PITCH = 0.0f;
 const float SPEED = 0.01f;
 const float SENSITIVITY = 0.1f;
 const float ZOOM = 45.0f;
-const float FARPLANE = 0.1f;
-const float NEARPLANE = 100.0f;
+const float FARPLANE = 100.0f;
+const float NEARPLANE = 0.1f;
 
 class Camera
 {

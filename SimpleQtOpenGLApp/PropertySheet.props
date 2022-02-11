@@ -3,7 +3,8 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
     <ASSIMP_LIB>C:\Assimp\lib</ASSIMP_LIB>
-    <ASSIMP_INC>C:\Assimp\include\assimp</ASSIMP_INC>
+    <ASSIMP_INC>C:\Assimp\include</ASSIMP_INC>
+    <GLM_INC>D:\Dev\OpenGL\glm-install\include</GLM_INC>
   </PropertyGroup>
   <PropertyGroup />
   <ItemDefinitionGroup />
@@ -13,6 +14,9 @@
     </BuildMacro>
     <BuildMacro Include="ASSIMP_INC">
       <Value>$(ASSIMP_INC)</Value>
+    </BuildMacro>
+    <BuildMacro Include="GLM_INC">
+      <Value>$(GLM_INC)</Value>
     </BuildMacro>
   </ItemGroup>
 </Project>

@@ -1,42 +1,30 @@
 #pragma once
 
 #include <QVector>
-#include <QOpenGLVertexArrayObject>
 
 #include "Vertex.h"
 
-class QOpenGLBuffer;
-class QOpenGLFunctions;
-class QOpenGLShaderProgram;
+class QOpenGLFunctions_3_3_Core;
 
 class Mesh
 {
 public:
-	Mesh();
+	Mesh(QOpenGLFunctions_3_3_Core* glFuncs, QVector<Vertex> vertices, QVector<GLuint> indices);
 	~Mesh();
 
-	QOpenGLBuffer* createBuffer();
-
-	void addVertex(Vertex v);
-
-	void draw(QOpenGLShaderProgram* program);
-
-	//QOpenGLVertexArrayObject* getVAO() const
-	//{
-	//	return m_vao;
-	//}
-
-
-	QVector<Vertex> getVertices()
-	{
-		return m_vertices;
-	}
+	void draw();
 
 private:
-	QVector<QOpenGLBuffer> m_buffers;
-	QOpenGLVertexArrayObject m_vao;
+	void setupMesh();
+
+private:
+	QOpenGLFunctions_3_3_Core* m_glFuncs;
 
 	QVector<Vertex> m_vertices;
-	int m_numVertices;
+	QVector<GLuint> m_indices;
+
+	GLuint m_vao;
+	GLuint m_vbo;
+
 };
 

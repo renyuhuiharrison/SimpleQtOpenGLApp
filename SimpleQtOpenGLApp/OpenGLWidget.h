@@ -2,13 +2,11 @@
 
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions_3_3_Core>
-#include <QOpenGLBuffer>
-#include <QOpenGLVertexArrayObject>
-#include <QOpenGLShaderProgram>
-#include <QVector>
 
 class Camera;
 class Mesh;
+class Model;
+class Shader;
 
 class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core
 {
@@ -29,6 +27,7 @@ public:
     ~OpenGLWidget();
 
 	void displayTriangle();
+	void importModel(QString fileName);
 
 protected:
 	//Sets up the OpenGL resources and state. 
@@ -43,8 +42,7 @@ protected:
 	//Renders the OpenGL scene. Gets called whenever the widget needs to be updated
 	void paintGL() Q_DECL_OVERRIDE;
 
-	bool createShader();
-
+	//键盘和鼠标的响应事件
 	void keyPressEvent(QKeyEvent* event) Q_DECL_OVERRIDE;
 	void keyReleaseEvent(QKeyEvent* event) Q_DECL_OVERRIDE;
 	void mousePressEvent(QMouseEvent* event) Q_DECL_OVERRIDE;
@@ -53,22 +51,20 @@ protected:
 	void wheelEvent(QWheelEvent* event) Q_DECL_OVERRIDE;
 
 private:
+	//打印opengl相关信息
 	void printContextInformation();
 
 private:
 
-	int m_width;
-	int m_height;
+	int m_width; //窗口宽度
+	int m_height;  //窗口高度
 	
-	QOpenGLShaderProgram m_shaderProgram;
-
-	QOpenGLBuffer m_vbo; //顶点缓存对象（Vertex Buffer Object）
-	QOpenGLVertexArrayObject m_vao; //顶点数组对象（Vertex Array Object）
+	Shader* m_shader;
+	QOpenGLFunctions_3_3_Core* m_glFuncs;
 
 	GLuint m_vbo_vertex;
 	GLuint m_VAO;
-
-	//QVector<GLfloat> m_vertices;
+	GLuint m_EBO;
 
 	Camera* m_camera;
 	float	m_lastX;
@@ -81,5 +77,7 @@ private:
 	bool	m_bLoadMesh;
 
 	QVector<Mesh*> m_meshes;
+
+	Model* m_model;
 };
 
