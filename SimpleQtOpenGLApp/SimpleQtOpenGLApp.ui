@@ -35,6 +35,7 @@
     </property>
     <addaction name="actionDisplayTriangle"/>
     <addaction name="actionImportModel"/>
+    <addaction name="actionClearScene"/>
    </widget>
    <addaction name="menu"/>
   </widget>
@@ -55,6 +56,11 @@
   <action name="actionImportModel">
    <property name="text">
     <string>导入模型</string>
+   </property>
+  </action>
+  <action name="actionClearScene">
+   <property name="text">
+    <string>清空场景</string>
    </property>
   </action>
  </widget>

@@ -21,6 +21,8 @@ Mesh::~Mesh()
 	m_vertices.clear();
 	m_indices.clear();
 
+	//m_glFuncs->initializeOpenGLFunctions();
+
 	if (m_vbo != 0) {
 		m_glFuncs->glDeleteBuffers(1, &m_vbo);
 	}
@@ -28,6 +30,7 @@ Mesh::~Mesh()
 	if (m_vao != 0) {
 		m_glFuncs->glDeleteVertexArrays(1, &m_vao);
 	}
+
 }
 
 void Mesh::draw()

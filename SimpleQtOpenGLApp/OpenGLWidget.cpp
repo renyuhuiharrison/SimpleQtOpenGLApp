@@ -33,7 +33,21 @@ OpenGLWidget::OpenGLWidget(QWidget*parent) :
 
 OpenGLWidget::~OpenGLWidget()
 {
-	delete m_camera;
+	deleteAllMeshes();
+
+	if (m_camera)
+	{
+		delete m_camera;
+		m_camera = nullptr;
+	}
+
+	deleteModel();
+
+	if (m_shader)
+	{
+		delete m_shader;
+		m_shader = nullptr;
+	}
 }
 
 void OpenGLWidget::importModel(QString fileName)
@@ -44,6 +58,14 @@ void OpenGLWidget::importModel(QString fileName)
 	m_bLoadMesh = true;
 }
 
+
+void OpenGLWidget::clearScene()
+{
+	deleteModel();
+	deleteAllMeshes();
+
+	update();
+}
 
 void OpenGLWidget::displayTriangle()
 {
@@ -316,5 +338,19 @@ void OpenGLWidget::printContextInformation()
 	qDebug() << "Vender:" << glVendor;
 	qDebug() << qPrintable(glType) << qPrintable(glVersion) << "(" << qPrintable(glProfile) << ")";
 
+}
+
+void OpenGLWidget::deleteAllMeshes()
+{
+	QVector<Mesh*>().swap(m_meshes);
+}
+
+void OpenGLWidget::deleteModel()
+{
+	if (m_model)
+	{
+		delete m_model;
+		m_model = nullptr;
+	}
 }
 

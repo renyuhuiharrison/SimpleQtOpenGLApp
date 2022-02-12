@@ -27,7 +27,10 @@ public:
     ~OpenGLWidget();
 
 	void displayTriangle();
+	
 	void importModel(QString fileName);
+
+	void clearScene();
 
 protected:
 	//Sets up the OpenGL resources and state. 
@@ -53,6 +56,9 @@ protected:
 private:
 	//打印opengl相关信息
 	void printContextInformation();
+
+	void deleteAllMeshes();
+	void deleteModel();
 
 private:
 

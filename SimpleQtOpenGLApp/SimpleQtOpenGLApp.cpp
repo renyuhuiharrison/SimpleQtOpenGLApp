@@ -38,4 +38,11 @@ void SimpleQtOpenGLApp::initActions()
 			ui.openglWidget->importModel(fileName);
 		}
 	);
+
+	//Çå¿Õ³¡¾°
+	connect(ui.actionClearScene, &QAction::triggered, [=]()
+		{
+			ui.openglWidget->clearScene();
+		}
+	);
 }

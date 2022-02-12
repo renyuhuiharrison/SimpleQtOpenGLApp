@@ -20,7 +20,7 @@ Model::Model(QOpenGLFunctions_3_3_Core* glFuncs, QString fileName):
 
 Model::~Model()
 {
-
+	QVector<Mesh*>().swap(m_meshes);
 }
 
 void Model::draw()
