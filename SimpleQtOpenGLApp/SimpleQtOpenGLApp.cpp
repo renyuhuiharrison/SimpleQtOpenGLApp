@@ -34,7 +34,7 @@ void SimpleQtOpenGLApp::initActions()
 			if (!fileInfo.exists()){
 				return;
 			}
-
+			ui.openglWidget->clearScene();
 			ui.openglWidget->importModel(fileName);
 		}
 	);
