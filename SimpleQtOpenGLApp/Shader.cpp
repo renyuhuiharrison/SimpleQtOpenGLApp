@@ -1,50 +1,30 @@
 #include "stdafx.h"
 
-//C++
-#include <fstream>
-#include <sstream>
-#include <iostream>
 
 //Qt
 #include <QOpenGLFunctions_3_3_Core>
+#include <QFile>
+#include <QDebug>
 
 //local
 #include "Shader.h"
 
 
-bool Shader::initShader(const char* _vertexPath, const char* _fragPath)
+bool Shader::initShader(QString _vertexPath, QString _fragPath)
 {
-    std::string _vertexCode("");
-    std::string _fragCode("");
+	QFile vertexFile(_vertexPath);
+    vertexFile.open(QIODevice::ReadOnly);
+    QString vertexCode = vertexFile.readAll();
 
-    std::ifstream   _vShaderFile;
-    std::ifstream   _fShaderFile;
+	QFile fragFile(_fragPath);
+    fragFile.open(QIODevice::ReadOnly);
+	QString fragCode = fragFile.readAll();
 
-    _vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    _fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    std::string stdStrVCode = vertexCode.toStdString();
+    const char* _vShaderStr = stdStrVCode.c_str();
 
-    try
-    {
-        _vShaderFile.open(_vertexPath);
-        _fShaderFile.open(_fragPath);
-
-        std::stringstream _vShaderStream, _fShaderStream;
-        _vShaderStream << _vShaderFile.rdbuf();
-        _fShaderStream << _fShaderFile.rdbuf();
-
-        _vertexCode = _vShaderStream.str();
-        _fragCode = _fShaderStream.str();
-    }
-    catch (std::ifstream::failure e)
-    {
-        std::string errStr = "read shader fail";
-        std::cout << errStr << std::endl;
-
-        return false;
-    }
-
-    const char* _vShaderStr = _vertexCode.c_str();
-    const char* _fShaderStr = _fragCode.c_str();
+	std::string stdStrFCode = fragCode.toStdString();
+	const char* _fShaderStr = stdStrFCode.c_str();
 
     //shaderµÄ±àÒëÁ´½Ó
     unsigned int   _vertexID = 0, _fragID = 0;
@@ -61,7 +41,7 @@ bool Shader::initShader(const char* _vertexPath, const char* _fragPath)
     {
         m_glFuncs->glGetShaderInfoLog(_vertexID, 512, NULL, _infoLog);
         std::string errStr(_infoLog);
-        std::cout << _infoLog << std::endl;
+        qDebug() << _infoLog;
 
 		return false;
 	}
@@ -75,7 +55,7 @@ bool Shader::initShader(const char* _vertexPath, const char* _fragPath)
     {
         m_glFuncs->glGetShaderInfoLog(_fragID, 512, NULL, _infoLog);
         std::string errStr(_infoLog);
-        std::cout << _infoLog << std::endl;
+        qDebug() << _infoLog;
 
         return false;
     }
@@ -91,7 +71,7 @@ bool Shader::initShader(const char* _vertexPath, const char* _fragPath)
     {
         m_glFuncs->glGetProgramInfoLog(m_shaderProgram, 512, NULL, _infoLog);
         std::string errStr(_infoLog);
-        std::cout << _infoLog << std::endl;
+        qDebug() << _infoLog;
 
 		return false;
 	}

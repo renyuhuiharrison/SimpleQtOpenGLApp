@@ -1,4 +1,6 @@
 <RCC>
-    <qresource prefix="SimpleQtOpenGLApp">
+    <qresource prefix="/">
+        <file>Shaders/ModelVertex.vert</file>
+        <file>Shaders/ModelFragment.frag</file>
     </qresource>
 </RCC>

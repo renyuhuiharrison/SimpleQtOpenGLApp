@@ -2,6 +2,7 @@
 
 #include <QMatrix4x4>
 #include <QVector3D>
+#include <QString>
 
 class QOpenGLFunctions_3_3_Core;
 
@@ -20,7 +21,7 @@ public:
 	{
 
 	}
-	bool initShader(const char* _vertexPath, const char* _fragPath);
+	bool initShader(QString _vertexPath, QString _fragPath);
 	void start();
 	void end();
 

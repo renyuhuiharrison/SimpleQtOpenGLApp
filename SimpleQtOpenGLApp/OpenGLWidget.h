@@ -61,6 +61,8 @@ private:
 	void deleteModel();
 
 private:
+	const QString m_modelVShaderFilePath = ":/Shaders/ModelVertex.vert";
+	const QString m_modelFShaderFilePath = ":/Shaders/ModelFragment.frag";
 
 	int m_width; //窗口宽度
 	int m_height;  //窗口高度
@@ -85,5 +87,6 @@ private:
 	QVector<Mesh*> m_meshes;
 
 	Model* m_model;
+
 };
 

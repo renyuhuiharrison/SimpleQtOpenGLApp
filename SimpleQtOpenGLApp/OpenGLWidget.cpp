@@ -1,6 +1,5 @@
 #include "stdafx.h"
 
-
 //local
 #include "OpenGLWidget.h"
 #include "Shader.h"
@@ -29,6 +28,7 @@ OpenGLWidget::OpenGLWidget(QWidget*parent) :
 
 
 	setFocusPolicy(Qt::StrongFocus);//用于响应键盘事件
+
 }
 
 OpenGLWidget::~OpenGLWidget()
@@ -101,7 +101,8 @@ void OpenGLWidget::initializeGL()
 
 	m_shader = new Shader(m_glFuncs);
 	
-	if (!m_shader->initShader("vertexShader.vert", "fragmentShader.frag")) {
+
+	if (!m_shader->initShader(m_modelVShaderFilePath, m_modelFShaderFilePath)) {
 		return;
 	}
 }
