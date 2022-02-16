@@ -1,93 +1,81 @@
-#ifndef CAMERA_H
-#define CAMERA_H
+#pragma once
 
-#include <QVector3D>
-#include <QMatrix4x4>
-#include <QtMath>
+#include"glm/glm.hpp"
 
 
-// Default camera values
-const float YAW = -90.0f;
-const float PITCH = 0.0f;
-const float SPEED = 0.01f;
-const float SENSITIVITY = 0.1f;
-const float ZOOM = 45.0f;
-const float FARPLANE = 100.0f;
-const float NEARPLANE = 0.1f;
-
+enum class CAMERA_MOVE
+{
+	MOVE_LEFT,
+	MOVE_RIGHT,
+	MOVE_FRONT,
+	MOVE_BACK,
+	MOVE_UP,
+	MOVE_DOWN
+};
 class Camera
 {
-public:
-	enum Camera_Movement : int
-    {
-		FORWARD = 0,
-		BACKWARD,
-		LEFT,
-		RIGHT,
-		UP,
-		DOWN,
-	};
 
 public:
-
-    Camera(QVector3D position = QVector3D(0.0f, 0.0f, 0.0f),
-            QVector3D up = QVector3D(0.0f, 1.0f, 0.0f),
-            float yaw = YAW, float pitch = PITCH);
-
-    Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch);
-    
-    QMatrix4x4 GetViewMatrix();
-
-    //相机视角移动
-    void move(Camera::Camera_Movement direction, float deltaTime);
-    
-    //相机视角平移
-    void pan(float xoffset, float yoffset, float deltaTime);
-
-    //相机视角旋转
-    void rotate(float xoffset, float yoffset, bool constrainPitch = true);
-
-    inline float getZoom() const
-    {
-        return m_zoom;
-    }
-
-    inline float getNear() const
-    {
-        return m_near;
-    }
-    
-	inline float getFar() const
+	Camera()
 	{
-		return m_far;
+		m_position = glm::vec3(1.0f);
+		m_front = glm::vec3(1.0f);
+		m_up = glm::vec3(1.0f);
+		m_speed = 0.01f;
+
+		m_pitch = 0.0f;
+		m_yaw = -90.0f;
+
+		m_sensitivity = 0.1f;
+
+		m_xpos = 0.0f;
+		m_ypos = 0.0f;
+
+		m_firstMove = true;
+
+		m_vMatrix = glm::mat4(1.0f);
+	}
+	~Camera()
+	{
+
+	}
+	void lookAt(glm::vec3 _pos , glm::vec3 _front , glm::vec3 _up );
+	void update();
+
+	glm::mat4 getMatrix();
+	glm::vec3 getPosition();
+	glm::vec3 getDirection();
+
+	void setSpeed(float _speed)
+	{
+		m_speed = _speed;
 	}
 
+	void move(CAMERA_MOVE _mode);
+
+	void pitch(float _yOffset);
+	void yaw(float _xOffset);
+	void rotate(float xOffset, float yOffset, bool bConstrainPitch = true);
+	void pan(float xOffset, float yOffset);
+
+	void setSentitivity(float _s);
+	//void onMouseMove(double _xpos , double _ypos);
+
+
 private:
-	// calculates the front vector from the Camera's (updated) Euler Angles
-	void updateCameraVectors();
+	glm::vec3	m_position;
+	glm::vec3	m_front;
+	glm::vec3	m_up;
+	float		m_speed;
 
-	float Radians(float angle)
-	{
-		return angle * M_PI / 180;
-	}
+	float		m_pitch;
+	float		m_yaw;
+	float		m_sensitivity;
 
-private:
-     QVector3D m_position;
-     QVector3D m_front;
-     QVector3D m_up;
-     //QVector3D Right;
-     
-     // euler Angles
-     float m_yaw;
-     float m_pitch;
+	float		m_xpos;
+	float       m_ypos;
+	bool		m_firstMove;
 
-     // camera options
-     float m_speed;
-     float m_sensitivity;
-     float m_zoom;
-     float m_far;
-     float m_near;
-
+	glm::mat4	m_vMatrix;
 };
 
-#endif // CAMERA_H

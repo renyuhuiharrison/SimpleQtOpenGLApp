@@ -7,6 +7,7 @@
 #include <assimp/postprocess.h>
 
 //local
+#include "Vertex.h"
 #include "Model.h"
 #include "Mesh.h"
 
@@ -14,6 +15,7 @@ Model::Model(QOpenGLFunctions_3_3_Core* glFuncs, QString fileName):
 	m_glFuncs(glFuncs)
 {
 	m_bLoadSuccess = false;
+	
 
 	load(fileName);
 }

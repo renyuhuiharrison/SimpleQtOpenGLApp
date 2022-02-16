@@ -1,99 +1,150 @@
-#include "stdafx.h"
+#include "Camera.h"
 
-#include "camera.h"
+#include <glm/ext/matrix_transform.hpp>
 
-Camera::Camera(QVector3D position,QVector3D up ,
-       float yaw , float pitch ):
-    m_position(position),
-    m_up(up),
-    m_yaw(yaw),
-    m_pitch(pitch),
-    m_front(-position),
-    m_speed(SPEED),
-    m_sensitivity(SENSITIVITY),
-    m_zoom(ZOOM),
-    m_near(NEARPLANE),
-    m_far(FARPLANE)
+void Camera::lookAt(glm::vec3 _pos, glm::vec3 _front, glm::vec3 _up)
 {
-     updateCameraVectors();
-}
-Camera::Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) :
-    m_front(QVector3D(0.0f, 0.0f, -1.0f)),
-    m_speed(SPEED),
-    m_sensitivity(SENSITIVITY),
-    m_zoom(ZOOM)
-   {
-       m_position =QVector3D(posX, posY, posZ);
-       m_yaw = yaw;
-       m_pitch = pitch;
-       updateCameraVectors();
-   }
+	m_position = _pos;
+	m_front = glm::normalize(_front);
+	m_up = _up;
 
-QMatrix4x4 Camera::GetViewMatrix()
-{
-	QMatrix4x4 result;
-	result.lookAt(m_position, m_position + m_front, m_up);
-	return result;
+	m_vMatrix = glm::lookAt(m_position, m_position + m_front, m_up);
 }
 
-
-void Camera::move(Camera::Camera_Movement direction, float deltaTime)
+void Camera::update()
 {
-    float velocity = m_speed * deltaTime;
-    if (direction == Camera::FORWARD)
-        m_position += m_front * velocity;
-    if (direction == Camera::BACKWARD)
-        m_position -= m_front * velocity;
-    if (direction == Camera::LEFT)
-        m_position += QVector3D::crossProduct(m_front, m_up).normalized() * velocity;
-    if (direction == Camera::RIGHT)
-        m_position -= QVector3D::crossProduct(m_front, m_up).normalized() * velocity;
-    if (direction == Camera::UP)
-        m_position += m_up * velocity;
-    if (direction == Camera::DOWN)
-        m_position -= m_up * velocity;
+	m_vMatrix = glm::lookAt(m_position, m_position + m_front, m_up);
 }
 
-
-void Camera::pan(float xoffset, float yoffset, float deltaTime)
+glm::mat4 Camera::getMatrix()
 {
-	float velocity = m_speed * deltaTime;
-
-    m_position.setX(m_position.x() + xoffset * velocity);
-	m_position.setY(m_position.y() + yoffset * velocity);
+	return m_vMatrix;
 }
 
-void Camera::rotate(float xoffset, float yoffset, bool constrainPitch)
+glm::vec3 Camera::getPosition()
 {
-    xoffset *= m_sensitivity;
-    yoffset *= m_sensitivity;
-
-    m_yaw   += xoffset;
-    m_pitch += yoffset;
-
-    // make sure that when pitch is out of bounds, screen doesn't get flipped
-    if (constrainPitch)
-    {
-        if (m_pitch > 89.0f)
-            m_pitch = 89.0f;
-        if (m_pitch < -89.0f)
-            m_pitch = -89.0f;
-    }
-
-    // update Front, Right and Up Vectors using the updated Euler angles
-    updateCameraVectors();
+	return m_position;
 }
 
-void Camera::updateCameraVectors()
-  {
-      // calculate the new Front vector
-      QVector3D front;
-      front.setX(cos(Radians(this->m_yaw)) * cos(Radians(this->m_pitch)));
-      front.setY(sin(Radians(this->m_pitch)));
-      front.setZ(sin(Radians(this->m_yaw)) * cos(Radians(this->m_pitch)));
-      m_front = front.normalized();
+glm::vec3 Camera::getDirection()
+{
+	return m_front;
+}
 
-      // also re-calculate the Right and Up vector
-	  //Right = QVector3D::crossProduct(Front, Up).normalized();
-	  //Up = QVector3D::crossProduct(Right, Front).normalized();
-  }
+void Camera::move(CAMERA_MOVE _mode)
+{
+	switch (_mode)
+	{
+	case CAMERA_MOVE::MOVE_LEFT:
+		m_position -= glm::normalize(glm::cross(m_front, m_up)) * m_speed;
+		break;
+	case CAMERA_MOVE::MOVE_RIGHT:
+		m_position += glm::normalize(glm::cross(m_front, m_up)) * m_speed;
+		break;
+	case CAMERA_MOVE::MOVE_FRONT:
+		m_position += m_speed * m_front;
+		break;
+	case CAMERA_MOVE::MOVE_BACK:
+		m_position -= m_speed * m_front;
+		break;
+	case CAMERA_MOVE::MOVE_UP:
+		m_position -= m_speed * m_up;
+		break;
+	case CAMERA_MOVE::MOVE_DOWN:
+		m_position += m_speed * m_up;
+		break;
+	default:
+		break;
+	}
+}
+
+void Camera::pitch(float _yOffset)
+{
+	m_pitch += _yOffset * m_sensitivity;
+
+	if (m_pitch >= 89.0f)
+	{
+		m_pitch = 89.0f;
+	}
+
+	if (m_pitch <= -89.0f)
+	{
+		m_pitch = -89.0f;
+	}
+
+	m_front.y = sin(glm::radians(m_pitch));
+	m_front.x = cos(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
+	m_front.z = sin(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
+
+	m_front = glm::normalize(m_front);
+	update();
+}
+void Camera::yaw(float _xOffset)
+{
+	m_yaw += _xOffset * m_sensitivity;
+
+	m_front.y = sin(glm::radians(m_pitch));
+	m_front.x = cos(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
+	m_front.z = sin(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
+
+	m_front = glm::normalize(m_front);
+	update();
+}
+
+void Camera::rotate(float xOffset, float yOffset, bool bConstrainPitch)
+{
+	xOffset *= m_sensitivity;
+	yOffset *= m_sensitivity;
+
+	m_yaw += xOffset;
+	m_pitch += yOffset;
+
+	// make sure that when pitch is out of bounds, screen doesn't get flipped
+	if (bConstrainPitch)
+	{
+		if (m_pitch > 89.0f)
+			m_pitch = 89.0f;
+		if (m_pitch < -89.0f)
+			m_pitch = -89.0f;
+	}
+
+	pitch(yOffset);
+	yaw(xOffset);
+// 
+	//m_front.x = glm::cos(glm::radians(this->m_yaw)) * glm::cos(glm::radians(this->m_pitch));
+	//m_front.y = glm::sin(glm::radians(this->m_pitch));
+	//m_front.z = glm::sin(glm::radians(this->m_yaw)) * glm::cos(glm::radians(this->m_pitch));
+	//m_front = glm::normalize(m_front);
+}
+
+void Camera::pan(float xOffset, float yOffset)
+{
+	m_position.x = m_position.x + xOffset * m_speed;
+	m_position.y = m_position.y + yOffset * m_speed;
+}
+
+void Camera::setSentitivity(float _s)
+{
+	m_sensitivity = _s;
+}
+
+//void Camera::onMouseMove(double _xpos, double _ypos)
+//{
+//	if (m_firstMove)
+//	{
+//		m_xpos = _xpos;
+//		m_ypos = _ypos;
+//		m_firstMove = false;
+//		return;
+//	}
+//
+//	float _xOffset = _xpos - m_xpos;
+//	float _yOffset = -(_ypos - m_ypos);
+//
+//	m_xpos = _xpos;
+//	m_ypos = _ypos;
+//
+//	pitch(_yOffset);
+//	yaw(_xOffset);
+//}
+

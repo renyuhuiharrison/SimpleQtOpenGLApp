@@ -22,12 +22,14 @@ void SimpleQtOpenGLApp::initActions()
 		}
 	);
 
+	QString defaultDir("D:/models/Obj_models");
+
 	//导入模型
 	connect(ui.actionImportModel, &QAction::triggered, [=]()
 		{
 			QString fileName = QFileDialog::getOpenFileName(this, 
 				"open file", 
-				" ", 
+				defaultDir,
 				("obj(*.obj);;Allfile(*.*)"));
 
 			QFileInfo fileInfo(fileName);

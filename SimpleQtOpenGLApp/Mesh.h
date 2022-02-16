@@ -2,10 +2,9 @@
 
 #include <QVector>
 
-#include "Vertex.h"
 
 class QOpenGLFunctions_3_3_Core;
-
+class Vertex;
 class Mesh
 {
 public:

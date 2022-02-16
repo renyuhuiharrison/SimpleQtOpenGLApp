@@ -1,5 +1,9 @@
 #include "stdafx.h"
 
+//glm
+#include <glm/ext/matrix_clip_space.hpp>
+#include <glm/ext/matrix_transform.hpp>
+
 //local
 #include "OpenGLWidget.h"
 #include "Shader.h"
@@ -8,6 +12,18 @@
 #include "Mesh.h"
 #include "Model.h"
 
+//白光
+glm::vec4 globalAmbient(0.7f, 0.7f, 0.7f, 1.0f);
+glm::vec4 lightAmbient(0.0f, 0.0f, 0.0f, 1.0f);
+glm::vec4 lightDiffuse(1.0f, 1.0f, 1.0f, 1.0f);
+glm::vec4 lightSpecular(1.0f, 1.0f, 1.0f, 1.0f);
+
+//黄金材质
+glm::vec4 goldAmbient(0.2473f, 0.1995f, 0.0745f, 1.0f);
+glm::vec4 goldDiffuse(0.7516f, 0.6065f, 0.2265f, 1.0f);
+glm::vec4 goldSpecular(0.6283f, 0.5559f, 0.3661f, 1.0f);
+float goldShiness = 51.2f;
+
 
 OpenGLWidget::OpenGLWidget(QWidget*parent) : 
 	QOpenGLWidget(parent)
@@ -15,17 +31,25 @@ OpenGLWidget::OpenGLWidget(QWidget*parent) :
 	m_width = 0;
 	m_height = 0;
 
-	m_camera = new Camera(QVector3D(0.0f, 0.0f, 3.0f));
-	m_deltaTime = 1.0f;
+	m_camera = new Camera();
+	m_camera->lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	m_camera->setSpeed(0.05f);
+
 	m_lastX = width() / 2.0f;
 	m_lastY = height() / 2.0f;
+
 	m_bFirstMouse = true;
-	m_bLoadMesh = false;
-	m_model = nullptr;
-	m_shader = nullptr;
+	m_bLoadTriangle = false;
+	m_bLoadSun = false;
+	m_modelImported = nullptr;
+	m_shaderModel = nullptr;
+	m_shaderSun = nullptr;
+
+	m_lightPosition = glm::vec3(0.0f, 3.0f, 3.0f);
 
 	m_btnPressStatus = OpenGLWidget::ButtonNone;
 
+	m_appDirPathName = QCoreApplication::applicationDirPath();
 
 	setFocusPolicy(Qt::StrongFocus);//用于响应键盘事件
 
@@ -43,19 +67,25 @@ OpenGLWidget::~OpenGLWidget()
 
 	deleteModel();
 
-	if (m_shader)
+	if (m_shaderModel)
 	{
-		delete m_shader;
-		m_shader = nullptr;
+		delete m_shaderModel;
+		m_shaderModel = nullptr;
+	}
+
+	if (m_shaderSun)
+	{
+		delete m_shaderSun;
+		m_shaderSun = nullptr;
 	}
 }
 
 void OpenGLWidget::importModel(QString fileName)
 {
 	makeCurrent();
-	m_model = new Model(m_glFuncs, fileName);
+	m_modelImported = new Model(m_glFuncs, fileName);
 	doneCurrent();
-	m_bLoadMesh = true;
+	//m_bLoadMesh = true;
 }
 
 
@@ -71,13 +101,22 @@ void OpenGLWidget::displayTriangle()
 {
 	QVector<Vertex> vertices;
 	Vertex v1, v2, v3;
-	v1.m_position = glm::vec3(0.0f, 0.75f, 1.0f);
-	v2.m_position = glm::vec3(0.75f, -0.75f, 1.0f);
-	v3.m_position = glm::vec3(-0.75f, -0.75f, 1.0f);
+
+	//顶点坐标
+	v1.m_position = glm::vec3(0.0f, 1.0f, 0.0f);
+	v2.m_position = glm::vec3(1.0f, 0.0f, 0.0f);
+	v3.m_position = glm::vec3(-1.0f, 0.0f, 0.0f);
+
+	//计算顶点法线
+	v1.m_normal = glm::cross((v2.m_position - v1.m_position), (v3.m_position - v1.m_position));
+	v2.m_normal = glm::cross((v1.m_position - v2.m_position), (v3.m_position - v2.m_position));
+	v3.m_normal = glm::cross((v1.m_position - v3.m_position), (v2.m_position - v3.m_position));
+
 	vertices.push_back(v1);
 	vertices.push_back(v2);
 	vertices.push_back(v3);
 
+	//顶点索引
 	QVector<GLuint> indices;
 	indices.push_back(0);
 	indices.push_back(1);
@@ -88,7 +127,7 @@ void OpenGLWidget::displayTriangle()
 	doneCurrent();
 	m_meshes.push_back(mesh);
 
-	m_bLoadMesh = true;
+	m_bLoadTriangle = true;
 }
 
 void OpenGLWidget::initializeGL()
@@ -99,12 +138,16 @@ void OpenGLWidget::initializeGL()
 
 	printContextInformation();
 
-	m_shader = new Shader(m_glFuncs);
-	
+	makeCurrent();
 
-	if (!m_shader->initShader(m_modelVShaderFilePath, m_modelFShaderFilePath)) {
+	loadSun();
+
+	m_shaderModel = new Shader(m_glFuncs);
+	if (!m_shaderModel->initShader(m_modelVShaderFilePath, m_modelFShaderFilePath)) {
 		return;
 	}
+
+	doneCurrent();
 }
 
 void OpenGLWidget::resizeGL(int w, int h)
@@ -126,35 +169,72 @@ void OpenGLWidget::paintGL()
 	//开启深度测试
 	glEnable(GL_DEPTH_TEST);
 
-	if (!m_bLoadMesh)
-		return;
+	m_camera->update();
 
-	QMatrix4x4 modelMatrix;
-	modelMatrix.setToIdentity();
+	//模型矩阵
+	glm::mat4 modelMatrix(1.0f);
 
-	QMatrix4x4 viewMatrix = m_camera->GetViewMatrix();
+	//视图矩阵
+	glm::mat4 viewMatrix = m_camera->getMatrix();
 
-	QMatrix4x4 projMatrix;
-	projMatrix.perspective(m_camera->getZoom(), 1.0f * m_width / m_height, m_camera->getNear(), m_camera->getFar());
+	//投影矩阵
+	glm::mat4 projMatrix = glm::perspective(glm::radians(45.0f), (float)m_width / (float)m_height, 0.1f, 100.0f);
 
-	m_shader->start();
-	m_shader->setMatrix("modelMatrix", modelMatrix);
-	m_shader->setMatrix("viewMatrix", viewMatrix);
-	m_shader->setMatrix("projMatrix", projMatrix);
+	//MV矩阵的逆转置矩阵，用来变换法向量
+	glm::mat4 invTrMatrix = glm::transpose(glm::inverse(viewMatrix * modelMatrix));
 
-	//渲染网格
-	for (int i = 0; i < m_meshes.size(); i++)
+	//渲染太阳
+	if (m_bLoadSun && m_modelSun->isLoadSuccess())
 	{
-		m_meshes[i]->draw();
+		m_shaderSun->start();
+		{
+			//modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0f, -3.0f, 4.0f));
+			m_shaderSun->setMatrix("modelMatrix", modelMatrix);
+			m_shaderSun->setMatrix("viewMatrix", viewMatrix);
+			m_shaderSun->setMatrix("projMatrix", projMatrix);
+			m_modelSun->draw();
+		}
+		m_shaderSun->end();
 	}
 
 	//渲染模型
-	if (m_model && m_model->isLoadSuccess())
+	m_shaderModel->start();
 	{
-		m_model->draw();
-	}
+		//设置模型-视图-投影矩阵
+		m_shaderModel->setMatrix("modelMatrix", modelMatrix);
+		m_shaderModel->setMatrix("viewMatrix", viewMatrix);
+		m_shaderModel->setMatrix("projMatrix", projMatrix);
+		m_shaderModel->setMatrix("normalMatrix", invTrMatrix);
 
-	m_shader->end();
+		//设置光照
+		m_lightPosView = glm::vec3(viewMatrix * glm::vec4(m_lightPosition, 1.0));
+
+		m_shaderModel->setVec4("globalAmbient", globalAmbient);
+		m_shaderModel->setVec4("light.ambient", lightAmbient);
+		m_shaderModel->setVec4("light.diffuse", lightDiffuse);
+		m_shaderModel->setVec4("light.specular", lightSpecular);
+		m_shaderModel->setVec3("light.position", m_lightPosView);
+		m_shaderModel->setVec4("material.ambient", goldAmbient);
+		m_shaderModel->setVec4("material.diffuse", goldDiffuse);
+		m_shaderModel->setVec4("material.specular", goldSpecular);
+		m_shaderModel->setFloat("material.shininess", goldShiness);
+
+		//渲染网格
+		for (int i = 0; i < m_meshes.size(); i++)
+		{
+			m_meshes[i]->draw();
+		}
+
+		//渲染导入的模型
+		if (m_modelImported && m_modelImported->isLoadSuccess())
+		{
+			m_modelImported->draw();
+		}
+
+	}
+	m_shaderModel->end();
+
+
 }
 
 void OpenGLWidget::keyPressEvent(QKeyEvent* event)
@@ -162,32 +242,32 @@ void OpenGLWidget::keyPressEvent(QKeyEvent* event)
 	switch (event->key()) {
 	case Qt::Key_W: //相机视角向前移动
 	{
-		m_camera->move(Camera::FORWARD, m_deltaTime);
+		m_camera->move(CAMERA_MOVE::MOVE_FRONT);
 		break;
 	}
 	case Qt::Key_S: //相机视角向后移动
 	{
-		m_camera->move(Camera::BACKWARD, m_deltaTime);
+		m_camera->move(CAMERA_MOVE::MOVE_BACK);
 		break;
 	}
 	case Qt::Key_D: //相机视角向右移动
 	{
-		m_camera->move(Camera::LEFT, m_deltaTime);
+		m_camera->move(CAMERA_MOVE::MOVE_RIGHT);
 		break;
 	}
 	case Qt::Key_A: //相机视角向左移动
 	{
-		m_camera->move(Camera::RIGHT, m_deltaTime);
+		m_camera->move(CAMERA_MOVE::MOVE_LEFT);
 		break;
 	}
 	case Qt::Key_Q: //相机视角向上移动
 	{
-		m_camera->move(Camera::UP, m_deltaTime);
+		m_camera->move(CAMERA_MOVE::MOVE_UP);
 		break;
 	}
 	case Qt::Key_E: //相机视角向下移动
 	{
-		m_camera->move(Camera::DOWN, m_deltaTime);
+		m_camera->move(CAMERA_MOVE::MOVE_DOWN);
 		break;
 	}
 	default:
@@ -267,13 +347,15 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent* event)
 		int ypos = event->pos().y();
 		int yoffset = ypos - m_lastY;
 
+		m_lastY = ypos;
+
 		if (yoffset < 0)
 		{
-			m_camera->move(Camera::FORWARD, m_deltaTime);
+			m_camera->move(CAMERA_MOVE::MOVE_FRONT);
 		}
 		else
 		{
-			m_camera->move(Camera::BACKWARD, m_deltaTime);
+			m_camera->move(CAMERA_MOVE::MOVE_BACK);
 		}
 
 		update();
@@ -297,7 +379,7 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent* event)
 		m_lastX = xpos;
 		m_lastY = ypos;
 
-		m_camera->pan(xoffset, yoffset, m_deltaTime);
+		m_camera->pan(xoffset, yoffset);
 
 		update();
 	}
@@ -308,11 +390,11 @@ void OpenGLWidget::wheelEvent(QWheelEvent* event)
 	QPoint offset = event->angleDelta();
 	if (offset.y() > 0)
 	{
-		m_camera->move(Camera::FORWARD, m_deltaTime);
+		m_camera->move(CAMERA_MOVE::MOVE_FRONT);
 	}
 	else
 	{
-		m_camera->move(Camera::BACKWARD, m_deltaTime);
+		m_camera->move(CAMERA_MOVE::MOVE_BACK);
 	}
 	update();
 }
@@ -348,10 +430,27 @@ void OpenGLWidget::deleteAllMeshes()
 
 void OpenGLWidget::deleteModel()
 {
-	if (m_model)
+	if (m_modelImported)
 	{
-		delete m_model;
-		m_model = nullptr;
+		delete m_modelImported;
+		m_modelImported = nullptr;
 	}
 }
+
+void OpenGLWidget::loadSun()
+{
+	QString sunFilePath = m_appDirPathName + m_modelSunFileRelPath;
+
+	m_modelSun = new Model(m_glFuncs, sunFilePath);
+
+	m_shaderSun = new Shader(m_glFuncs);
+
+	if (!m_shaderSun->initShader(m_sunVShaderFilePath, m_sunFShaderFilePath)) {
+		return;
+	}
+
+	m_bLoadSun = true;
+}
+
+
 

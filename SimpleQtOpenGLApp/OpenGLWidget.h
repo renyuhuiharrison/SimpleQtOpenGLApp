@@ -3,6 +3,8 @@
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions_3_3_Core>
 
+#include"glm/glm.hpp"
+
 class Camera;
 class Mesh;
 class Model;
@@ -60,19 +62,26 @@ private:
 	void deleteAllMeshes();
 	void deleteModel();
 
+	void loadSun();
+
+
 private:
 	const QString m_modelVShaderFilePath = ":/Shaders/ModelVertex.vert";
 	const QString m_modelFShaderFilePath = ":/Shaders/ModelFragment.frag";
 
+	const QString m_sunVShaderFilePath = ":/Shaders/SunVertexShader.vert";
+	const QString m_sunFShaderFilePath = ":/Shaders/SunFragmentShader.frag";
+
+	const QString m_modelSunFileRelPath = "/Models/sun.obj";
+
 	int m_width; //窗口宽度
 	int m_height;  //窗口高度
-	
-	Shader* m_shader;
-	QOpenGLFunctions_3_3_Core* m_glFuncs;
 
-	GLuint m_vbo_vertex;
-	GLuint m_VAO;
-	GLuint m_EBO;
+	QString m_appDirPathName; //程序运行路径
+
+	Shader* m_shaderModel;
+	Shader* m_shaderSun;
+	QOpenGLFunctions_3_3_Core* m_glFuncs;
 
 	Camera* m_camera;
 	float	m_lastX;
@@ -81,12 +90,16 @@ private:
 
 	ButtonPressStatus m_btnPressStatus;
 
-	float	m_deltaTime;  // time between current frame and last frame
-	bool	m_bLoadMesh;
+	bool	m_bLoadTriangle;
+	bool	m_bLoadSun; //是否加载sun模型
 
 	QVector<Mesh*> m_meshes;
 
-	Model* m_model;
+	Model* m_modelImported;
 
+	Model* m_modelSun;
+
+	glm::vec3 m_lightPosition;
+	glm::vec3 m_lightPosView;
 };
 

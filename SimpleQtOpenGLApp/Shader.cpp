@@ -1,10 +1,12 @@
 #include "stdafx.h"
 
-
 //Qt
 #include <QOpenGLFunctions_3_3_Core>
 #include <QFile>
 #include <QDebug>
+
+//glm
+#include <glm/gtc/type_ptr.hpp>
 
 //local
 #include "Shader.h"
@@ -40,8 +42,8 @@ bool Shader::initShader(QString _vertexPath, QString _fragPath)
     if (!_successFlag)
     {
         m_glFuncs->glGetShaderInfoLog(_vertexID, 512, NULL, _infoLog);
-        std::string errStr(_infoLog);
-        qDebug() << _infoLog;
+        QString errStr(_infoLog);
+        qDebug() << errStr;
 
 		return false;
 	}
@@ -54,8 +56,8 @@ bool Shader::initShader(QString _vertexPath, QString _fragPath)
     if (!_successFlag)
     {
         m_glFuncs->glGetShaderInfoLog(_fragID, 512, NULL, _infoLog);
-        std::string errStr(_infoLog);
-        qDebug() << _infoLog;
+        QString errStr(_infoLog);
+        qDebug() << errStr;
 
         return false;
     }
@@ -70,8 +72,8 @@ bool Shader::initShader(QString _vertexPath, QString _fragPath)
     if (!_successFlag)
     {
         m_glFuncs->glGetProgramInfoLog(m_shaderProgram, 512, NULL, _infoLog);
-        std::string errStr(_infoLog);
-        qDebug() << _infoLog;
+        QString errStr(_infoLog);
+        qDebug() << errStr;
 
 		return false;
 	}
@@ -92,26 +94,28 @@ void Shader::end()
     m_glFuncs->glUseProgram(0);
 }
 
-void Shader::setMatrix(const std::string& _name, QMatrix4x4 _matrix)const
+
+void Shader::setMatrix(const char* _name, glm::mat4 _matrix) const
 {
-    m_glFuncs->glUniformMatrix4fv(m_glFuncs->glGetUniformLocation(m_shaderProgram, _name.c_str()) , 1 , GL_FALSE , _matrix.data());
+    m_glFuncs->glUniformMatrix4fv(m_glFuncs->glGetUniformLocation(m_shaderProgram, _name), 1, GL_FALSE, glm::value_ptr(_matrix));
 }
 
-void Shader::setVec3(const std::string& _name, QVector3D _vec3)const
+void Shader::setVec3(const char* _name, glm::vec3 _vec3)const
 {
-	float* vecArr = new float[3];
-	for (int i = 0; i < 3; ++i) {
-        vecArr[i] = _vec3[i];
-	}
-    m_glFuncs->glUniform3fv(m_glFuncs->glGetUniformLocation(m_shaderProgram, _name.c_str()), 1, vecArr);
+    m_glFuncs->glUniform3fv(m_glFuncs->glGetUniformLocation(m_shaderProgram, _name), 1, glm::value_ptr(_vec3));
 }
 
-void Shader::setFloat(const std::string& _name, float _f)const
+void Shader::setVec4(const char* _name, glm::vec4 _vec4) const
 {
-    m_glFuncs->glUniform1f(m_glFuncs->glGetUniformLocation(m_shaderProgram, _name.c_str()), _f);
+	m_glFuncs->glUniform4fv(m_glFuncs->glGetUniformLocation(m_shaderProgram, _name), 1, glm::value_ptr(_vec4));
 }
 
-void Shader::setInt(const std::string& _name, int _i)const
+void Shader::setFloat(const char* _name, float _f)const
 {
-    m_glFuncs->glUniform1i(m_glFuncs->glGetUniformLocation(m_shaderProgram, _name.c_str()), _i);
+    m_glFuncs->glUniform1f(m_glFuncs->glGetUniformLocation(m_shaderProgram, _name), _f);
+}
+
+void Shader::setInt(const char* _name, int _i)const
+{
+    m_glFuncs->glUniform1i(m_glFuncs->glGetUniformLocation(m_shaderProgram, _name), _i);
 }

@@ -1,8 +1,8 @@
 #pragma once
 
-#include <QMatrix4x4>
-#include <QVector3D>
 #include <QString>
+
+#include"glm/glm.hpp"
 
 class QOpenGLFunctions_3_3_Core;
 
@@ -25,9 +25,10 @@ public:
 	void start();
 	void end();
 
-	void setMatrix(const std::string & _name , QMatrix4x4 _matrix)const;
-	void setVec3(const std::string& _name, QVector3D _vec3)const;
-	void setFloat(const std::string& _name, float _f)const;
-	void setInt(const std::string& _name, int _i)const;
+	void setMatrix(const char* _name, glm::mat4 _matrix)const;
+	void setVec3(const char* _name, glm::vec3 _vec3)const;
+	void setVec4(const char* _name, glm::vec4 _vec4)const;
+	void setFloat(const char* _name, float _f)const;
+	void setInt(const char* _name, int _i)const;
 };
 

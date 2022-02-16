@@ -2,5 +2,7 @@
     <qresource prefix="/">
         <file>Shaders/ModelVertex.vert</file>
         <file>Shaders/ModelFragment.frag</file>
+        <file>Shaders/SunVertexShader.vert</file>
+        <file>Shaders/SunFragmentShader.frag</file>
     </qresource>
 </RCC>
