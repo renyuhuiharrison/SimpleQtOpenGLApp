@@ -6,6 +6,9 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+//glm
+#include <glm/ext/matrix_transform.hpp>
+
 //local
 #include "Vertex.h"
 #include "Model.h"
@@ -16,6 +19,8 @@ Model::Model(QOpenGLFunctions_3_3_Core* glFuncs, QString fileName):
 {
 	m_bLoadSuccess = false;
 	
+	m_matrix = glm::mat4(1.0f);
+	m_speed = 0.05f;
 
 	load(fileName);
 }
@@ -32,6 +37,36 @@ void Model::draw()
 		m_meshes[i]->draw();
 	}
 }
+
+void Model::move(MODEL_MOVE mode)
+{
+	switch (mode)
+	{
+	case Model::MOVE_LEFT:
+		m_translate = -glm::vec3(1.0f, 0.0f, 0.0f) * m_speed;
+		break;
+	case Model::MOVE_RIGHT:
+		m_translate = glm::vec3(1.0f, 0.0f, 0.0f) * m_speed;
+		break;
+	case Model::MOVE_FRONT:
+		m_translate = -glm::vec3(0.0f, 0.0f, 1.0f) * m_speed;
+		break;
+	case Model::MOVE_BACK:
+		m_translate = glm::vec3(0.0f, 0.0f, 1.0f) * m_speed;
+		break;
+	case Model::MOVE_UP:
+		m_translate = -glm::vec3(0.0f, 1.0f, 0.0f) * m_speed;
+		break;
+	case Model::MOVE_DOWN:
+		m_translate = glm::vec3(0.0f, 1.0f, 0.0f) * m_speed;
+		break;
+	default:
+		break;
+	}
+
+	m_matrix = glm::translate(m_matrix, m_translate);
+}
+
 
 void Model::load(QString fileName)
 {

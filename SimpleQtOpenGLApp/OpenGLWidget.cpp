@@ -45,7 +45,7 @@ OpenGLWidget::OpenGLWidget(QWidget*parent) :
 	m_shaderModel = nullptr;
 	m_shaderSun = nullptr;
 
-	m_lightPosition = glm::vec3(0.0f, 3.0f, 3.0f);
+	m_lightPosition = glm::vec3(0.0f, 0.0f, 0.0f);
 
 	m_btnPressStatus = OpenGLWidget::ButtonNone;
 
@@ -85,7 +85,6 @@ void OpenGLWidget::importModel(QString fileName)
 	makeCurrent();
 	m_modelImported = new Model(m_glFuncs, fileName);
 	doneCurrent();
-	//m_bLoadMesh = true;
 }
 
 
@@ -172,7 +171,12 @@ void OpenGLWidget::paintGL()
 	m_camera->update();
 
 	//模型矩阵
-	glm::mat4 modelMatrix(1.0f);
+	glm::mat4 sunMatrix = m_modelSun->getMatrix();
+
+	//更新太阳位置
+	m_lightPosition[0] = sunMatrix[3][0];
+	m_lightPosition[1] = sunMatrix[3][1];
+	m_lightPosition[2] = sunMatrix[3][2];
 
 	//视图矩阵
 	glm::mat4 viewMatrix = m_camera->getMatrix();
@@ -181,21 +185,23 @@ void OpenGLWidget::paintGL()
 	glm::mat4 projMatrix = glm::perspective(glm::radians(45.0f), (float)m_width / (float)m_height, 0.1f, 100.0f);
 
 	//MV矩阵的逆转置矩阵，用来变换法向量
-	glm::mat4 invTrMatrix = glm::transpose(glm::inverse(viewMatrix * modelMatrix));
+	glm::mat4 invTrMatrix = glm::transpose(glm::inverse(viewMatrix * sunMatrix));
 
 	//渲染太阳
 	if (m_bLoadSun && m_modelSun->isLoadSuccess())
 	{
 		m_shaderSun->start();
 		{
-			//modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0f, -3.0f, 4.0f));
-			m_shaderSun->setMatrix("modelMatrix", modelMatrix);
+			m_shaderSun->setMatrix("modelMatrix", sunMatrix);
 			m_shaderSun->setMatrix("viewMatrix", viewMatrix);
 			m_shaderSun->setMatrix("projMatrix", projMatrix);
 			m_modelSun->draw();
 		}
 		m_shaderSun->end();
 	}
+
+
+	glm::mat4 modelMatrix(1.0f);
 
 	//渲染模型
 	m_shaderModel->start();
@@ -268,6 +274,36 @@ void OpenGLWidget::keyPressEvent(QKeyEvent* event)
 	case Qt::Key_E: //相机视角向下移动
 	{
 		m_camera->move(CAMERA_MOVE::MOVE_DOWN);
+		break;
+	}
+	case Qt::Key_I: //灯光向前移动
+	{
+		m_modelSun->move(Model::MOVE_FRONT);
+		break;
+	}
+	case Qt::Key_K: //灯光向后移动
+	{
+		m_modelSun->move(Model::MOVE_BACK);
+		break;
+	}
+	case Qt::Key_J: //灯光向左移动
+	{
+		m_modelSun->move(Model::MOVE_LEFT);
+		break;
+	}
+	case Qt::Key_L: //灯光向右移动
+	{
+		m_modelSun->move(Model::MOVE_RIGHT);
+		break;
+	}
+	case Qt::Key_U: //灯光向上移动
+	{
+		m_modelSun->move(Model::MOVE_UP);
+		break;
+	}
+	case Qt::Key_O: //相机视角向下移动
+	{
+		m_modelSun->move(Model::MOVE_DOWN);
 		break;
 	}
 	default:

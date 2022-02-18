@@ -3,6 +3,7 @@
 #include <QVector>
 #include <QString>
 
+#include <glm/common.hpp>
 
 class Mesh;
 struct aiNode;
@@ -10,8 +11,20 @@ struct aiScene;
 struct aiMesh;
 class QOpenGLFunctions_3_3_Core;
 
+
 class Model
 {
+public:
+	enum MODEL_MOVE : int
+	{
+		MOVE_LEFT,
+		MOVE_RIGHT,
+		MOVE_FRONT,
+		MOVE_BACK,
+		MOVE_UP,
+		MOVE_DOWN
+	};
+
 public:
 	Model(QOpenGLFunctions_3_3_Core* glFuncs, QString fileName);
 	~Model();
@@ -22,6 +35,15 @@ public:
 	{
 		return m_bLoadSuccess;
 	}
+
+	void move(MODEL_MOVE mode);
+
+
+	glm::mat4 getMatrix()const
+	{
+		return m_matrix;
+	}
+
 
 private:
 	void load(QString fileName);
@@ -34,5 +56,9 @@ private:
 	QVector<Mesh*> m_meshes;
 	QString m_fileName;
 	bool  m_bLoadSuccess;
+
+	glm::mat4 m_matrix;
+	glm::vec3 m_translate;
+	float		m_speed;
 };
 
