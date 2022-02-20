@@ -13,6 +13,10 @@ struct PositionalLight
 	vec4 diffuse;
 	vec4 specular;
 	vec3 position;
+
+	float kc;
+	float kl;
+	float kq;
 };
 
 struct Material
@@ -48,10 +52,15 @@ void main()
 	//计算视觉向量与反射光向量的角度
 	float cosPhi = dot(H, N);
 
+	//计算衰减
+    float dis = length(light.position - varyingVertPosition);
+    float attenuation = 1.0f / (light.kc + light.kl * dis + light.kq * dis* dis);
+
 	//按像素计算ADS分量，并合并以构建输出颜色
 	vec3 ambient = ((globalAmbient * material.ambient) + (light.ambient * material.ambient)).xyz;
 	vec3 diffuse = (light.diffuse.xyz * material.diffuse.xyz) * max(cosTheta, 0.0);
 	vec3 specular = light.specular.xyz * material.specular.xyz * pow(max(cosPhi, 0.0), material.shininess);
 
-	fragColor = vec4((ambient + diffuse + specular), 1.0);
+	vec3 result = (ambient + diffuse + specular) * attenuation;
+	fragColor = vec4(result, 1.0);
 }

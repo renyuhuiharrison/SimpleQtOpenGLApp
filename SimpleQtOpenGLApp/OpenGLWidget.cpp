@@ -229,6 +229,11 @@ void OpenGLWidget::paintGL()
 		m_shaderModel->setVec4("material.specular", goldSpecular);
 		m_shaderModel->setFloat("material.shininess", goldShiness);
 
+		//设置光照衰减系数
+		m_shaderModel->setFloat("light.kc", 1.0f);
+		m_shaderModel->setFloat("light.kl", 0.09f);
+		m_shaderModel->setFloat("light.kq", 0.032f);
+
 		//渲染网格
 		for (int i = 0; i < m_meshes.size(); i++)
 		{
