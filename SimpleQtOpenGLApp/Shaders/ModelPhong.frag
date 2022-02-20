@@ -3,6 +3,7 @@
 in vec3 varyingNormal;
 in vec3 varyingLightDir;
 in vec3 varyingVertPosition;
+in vec3 varyingHalfVector;
 
 out vec4 fragColor;
 
@@ -36,6 +37,7 @@ void main()
 	vec3 L = normalize(varyingLightDir);
 	vec3 N = normalize(varyingNormal);
 	vec3 V = normalize(viewPosition - varyingVertPosition);
+	vec3 H = normalize(varyingHalfVector);
 
 	//计算光照向量基于N的反射向量
 	vec3 R = normalize(reflect(-L, N));
@@ -44,7 +46,7 @@ void main()
 	float cosTheta = dot(L, N);
 
 	//计算视觉向量与反射光向量的角度
-	float cosPhi = dot(V, R);
+	float cosPhi = dot(H, N);
 
 	//按像素计算ADS分量，并合并以构建输出颜色
 	vec3 ambient = ((globalAmbient * material.ambient) + (light.ambient * material.ambient)).xyz;
