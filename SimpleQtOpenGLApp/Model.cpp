@@ -14,7 +14,7 @@
 #include "Model.h"
 #include "Mesh.h"
 
-Model::Model(QOpenGLFunctions_3_3_Core* glFuncs, QString fileName):
+Model::Model(QOpenGLFunctions_4_3_Core* glFuncs, QString fileName):
 	m_glFuncs(glFuncs)
 {
 	m_bLoadSuccess = false;

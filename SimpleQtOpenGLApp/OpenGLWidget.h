@@ -1,7 +1,7 @@
 #pragma once
 
 #include <QOpenGLWidget>
-#include <QOpenGLFunctions_3_3_Core>
+#include <QOpenGLFunctions_4_3_Core>
 
 #include"glm/glm.hpp"
 
@@ -10,7 +10,7 @@ class Mesh;
 class Model;
 class Shader;
 
-class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core
+class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions_4_3_Core
 {
     Q_OBJECT
 public:
@@ -66,8 +66,13 @@ private:
 
 
 private:
-	const QString m_modelVShaderFilePath = ":/Shaders/ModelVertex.vert";
-	const QString m_modelFShaderFilePath = ":/Shaders/ModelFragment.frag";
+	//Gouraud shader
+	const QString m_modelVertGouraudShaderFilePath = ":/Shaders/ModelGouraud.vert";
+	const QString m_modelFragGouraudShaderFilePath = ":/Shaders/ModelGouraud.frag";
+
+	//Phong shader
+	const QString m_modelVertPhongShaderFilePath = ":/Shaders/ModelPhong.vert";
+	const QString m_modelFragPhongShaderFilePath = ":/Shaders/ModelPhong.frag";
 
 	const QString m_sunVShaderFilePath = ":/Shaders/SunVertexShader.vert";
 	const QString m_sunFShaderFilePath = ":/Shaders/SunFragmentShader.frag";
@@ -81,7 +86,7 @@ private:
 
 	Shader* m_shaderModel;
 	Shader* m_shaderSun;
-	QOpenGLFunctions_3_3_Core* m_glFuncs;
+	QOpenGLFunctions_4_3_Core* m_glFuncs;
 
 	Camera* m_camera;
 	float	m_lastX;

@@ -1,8 +1,10 @@
 <RCC>
     <qresource prefix="/">
-        <file>Shaders/ModelVertex.vert</file>
-        <file>Shaders/ModelFragment.frag</file>
         <file>Shaders/SunVertexShader.vert</file>
         <file>Shaders/SunFragmentShader.frag</file>
+        <file>Shaders/ModelGouraud.frag</file>
+        <file>Shaders/ModelGouraud.vert</file>
+        <file>Shaders/ModelPhong.frag</file>
+        <file>Shaders/ModelPhong.vert</file>
     </qresource>
 </RCC>

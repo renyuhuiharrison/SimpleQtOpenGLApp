@@ -9,7 +9,7 @@ class Mesh;
 struct aiNode;
 struct aiScene;
 struct aiMesh;
-class QOpenGLFunctions_3_3_Core;
+class QOpenGLFunctions_4_3_Core;
 
 
 class Model
@@ -26,7 +26,7 @@ public:
 	};
 
 public:
-	Model(QOpenGLFunctions_3_3_Core* glFuncs, QString fileName);
+	Model(QOpenGLFunctions_4_3_Core* glFuncs, QString fileName);
 	~Model();
 
 	void draw();
@@ -52,7 +52,7 @@ private:
 
 
 private:
-	QOpenGLFunctions_3_3_Core* m_glFuncs;
+	QOpenGLFunctions_4_3_Core* m_glFuncs;
 	QVector<Mesh*> m_meshes;
 	QString m_fileName;
 	bool  m_bLoadSuccess;

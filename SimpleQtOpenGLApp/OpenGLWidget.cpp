@@ -133,7 +133,7 @@ void OpenGLWidget::initializeGL()
 {
     this->initializeOpenGLFunctions();    
 
-	m_glFuncs = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_3_3_Core>();
+	m_glFuncs = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_4_3_Core>();
 
 	printContextInformation();
 
@@ -142,7 +142,7 @@ void OpenGLWidget::initializeGL()
 	loadSun();
 
 	m_shaderModel = new Shader(m_glFuncs);
-	if (!m_shaderModel->initShader(m_modelVShaderFilePath, m_modelFShaderFilePath)) {
+	if (!m_shaderModel->initShader(m_modelVertPhongShaderFilePath, m_modelFragPhongShaderFilePath)) {
 		return;
 	}
 
@@ -184,8 +184,6 @@ void OpenGLWidget::paintGL()
 	//投影矩阵
 	glm::mat4 projMatrix = glm::perspective(glm::radians(45.0f), (float)m_width / (float)m_height, 0.1f, 100.0f);
 
-	//MV矩阵的逆转置矩阵，用来变换法向量
-	glm::mat4 invTrMatrix = glm::transpose(glm::inverse(viewMatrix * sunMatrix));
 
 	//渲染太阳
 	if (m_bLoadSun && m_modelSun->isLoadSuccess())
@@ -203,6 +201,11 @@ void OpenGLWidget::paintGL()
 
 	glm::mat4 modelMatrix(1.0f);
 
+	//MV矩阵的逆转置矩阵，用来变换法向量
+	glm::mat4 invTrMatrix = glm::transpose(glm::inverse(viewMatrix * modelMatrix));
+
+	glm::vec3 viewPosition = m_camera->getPosition();
+
 	//渲染模型
 	m_shaderModel->start();
 	{
@@ -211,6 +214,7 @@ void OpenGLWidget::paintGL()
 		m_shaderModel->setMatrix("viewMatrix", viewMatrix);
 		m_shaderModel->setMatrix("projMatrix", projMatrix);
 		m_shaderModel->setMatrix("normalMatrix", invTrMatrix);
+		m_shaderModel->setVec3("viewPosition", viewPosition);
 
 		//设置光照
 		m_lightPosView = glm::vec3(viewMatrix * glm::vec4(m_lightPosition, 1.0));
@@ -239,8 +243,6 @@ void OpenGLWidget::paintGL()
 
 	}
 	m_shaderModel->end();
-
-
 }
 
 void OpenGLWidget::keyPressEvent(QKeyEvent* event)

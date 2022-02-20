@@ -56,6 +56,7 @@ void Camera::move(CAMERA_MOVE _mode)
 	default:
 		break;
 	}
+	update();
 }
 
 void Camera::pitch(float _yOffset)

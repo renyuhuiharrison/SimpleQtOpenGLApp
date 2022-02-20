@@ -1,7 +1,7 @@
 #include "stdafx.h"
 
 //Qt
-#include <QOpenGLFunctions_3_3_Core>
+#include <QOpenGLFunctions_4_3_Core>
 #include <QFile>
 #include <QDebug>
 

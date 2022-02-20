@@ -4,16 +4,16 @@
 
 #include"glm/glm.hpp"
 
-class QOpenGLFunctions_3_3_Core;
+class QOpenGLFunctions_4_3_Core;
 
 class Shader
 {
 private:
 	unsigned int m_shaderProgram;
-	QOpenGLFunctions_3_3_Core* m_glFuncs;
+	QOpenGLFunctions_4_3_Core* m_glFuncs;
 
 public:
-	Shader(QOpenGLFunctions_3_3_Core* glFuncs) : m_glFuncs(glFuncs)
+	Shader(QOpenGLFunctions_4_3_Core* glFuncs) : m_glFuncs(glFuncs)
 	{
 		m_shaderProgram = 0;
 	}
