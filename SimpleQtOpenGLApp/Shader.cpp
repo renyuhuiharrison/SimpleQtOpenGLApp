@@ -119,3 +119,8 @@ void Shader::setInt(const char* _name, int _i)const
 {
     m_glFuncs->glUniform1i(m_glFuncs->glGetUniformLocation(m_shaderProgram, _name), _i);
 }
+
+void Shader::setBool(const char* _name, bool val) const
+{
+	m_glFuncs->glUniform1i(m_glFuncs->glGetUniformLocation(m_shaderProgram, _name), val);
+}

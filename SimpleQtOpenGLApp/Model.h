@@ -5,12 +5,16 @@
 
 #include <glm/common.hpp>
 
+#include <assimp/material.h>
+
 class Mesh;
 struct aiNode;
 struct aiScene;
 struct aiMesh;
+struct aiMaterial;
+struct Texture;
 class QOpenGLFunctions_4_3_Core;
-
+class Shader;
 
 class Model
 {
@@ -29,7 +33,7 @@ public:
 	Model(QOpenGLFunctions_4_3_Core* glFuncs, QString fileName);
 	~Model();
 
-	void draw();
+	void draw(Shader* shader);
 	
 	bool isLoadSuccess()
 	{
@@ -49,7 +53,7 @@ private:
 	void load(QString fileName);
 	void processNode(aiNode* node, const aiScene* scene);
 	Mesh* processMesh(aiMesh* mesh, const aiScene* scene);
-
+	QVector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, QString typeName);
 
 private:
 	QOpenGLFunctions_4_3_Core* m_glFuncs;

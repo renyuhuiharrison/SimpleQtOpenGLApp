@@ -11,18 +11,19 @@
 #include "Camera.h"
 #include "Mesh.h"
 #include "Model.h"
+#include "Texture.h"
 
 //白光
 glm::vec4 globalAmbient(0.7f, 0.7f, 0.7f, 1.0f);
 glm::vec4 lightAmbient(0.0f, 0.0f, 0.0f, 1.0f);
 glm::vec4 lightDiffuse(1.0f, 1.0f, 1.0f, 1.0f);
-glm::vec4 lightSpecular(1.0f, 1.0f, 1.0f, 1.0f);
+glm::vec4 lightSpecular(0.5f, 0.5f, 0.5f, 1.0f);
 
 //黄金材质
-glm::vec4 goldAmbient(0.2473f, 0.1995f, 0.0745f, 1.0f);
-glm::vec4 goldDiffuse(0.7516f, 0.6065f, 0.2265f, 1.0f);
-glm::vec4 goldSpecular(0.6283f, 0.5559f, 0.3661f, 1.0f);
-float goldShiness = 51.2f;
+//glm::vec4 goldAmbient(0.2473f, 0.1995f, 0.0745f, 1.0f);
+//glm::vec4 goldDiffuse(0.7516f, 0.6065f, 0.2265f, 1.0f);
+//glm::vec4 goldSpecular(0.6283f, 0.5559f, 0.3661f, 1.0f);
+//float goldShiness = 51.2f;
 
 
 OpenGLWidget::OpenGLWidget(QWidget*parent) : 
@@ -121,8 +122,11 @@ void OpenGLWidget::displayTriangle()
 	indices.push_back(1);
 	indices.push_back(2);
 
+	QVector<Texture> textures;
+	Material material;
+
 	makeCurrent();
-	Mesh* mesh = new Mesh(m_glFuncs, vertices, indices);
+	Mesh* mesh = new Mesh(m_glFuncs, vertices, indices, textures, material);
 	doneCurrent();
 	m_meshes.push_back(mesh);
 
@@ -193,7 +197,7 @@ void OpenGLWidget::paintGL()
 			m_shaderSun->setMatrix("modelMatrix", sunMatrix);
 			m_shaderSun->setMatrix("viewMatrix", viewMatrix);
 			m_shaderSun->setMatrix("projMatrix", projMatrix);
-			m_modelSun->draw();
+			m_modelSun->draw(m_shaderModel);
 		}
 		m_shaderSun->end();
 	}
@@ -224,10 +228,10 @@ void OpenGLWidget::paintGL()
 		m_shaderModel->setVec4("light.diffuse", lightDiffuse);
 		m_shaderModel->setVec4("light.specular", lightSpecular);
 		m_shaderModel->setVec3("light.position", m_lightPosView);
-		m_shaderModel->setVec4("material.ambient", goldAmbient);
+		/*m_shaderModel->setVec4("material.ambient", goldAmbient);
 		m_shaderModel->setVec4("material.diffuse", goldDiffuse);
 		m_shaderModel->setVec4("material.specular", goldSpecular);
-		m_shaderModel->setFloat("material.shininess", goldShiness);
+		m_shaderModel->setFloat("material.shininess", goldShiness);*/
 
 		//设置光照衰减系数
 		m_shaderModel->setFloat("light.kc", 1.0f);
@@ -237,13 +241,13 @@ void OpenGLWidget::paintGL()
 		//渲染网格
 		for (int i = 0; i < m_meshes.size(); i++)
 		{
-			m_meshes[i]->draw();
+			m_meshes[i]->draw(m_shaderModel);
 		}
 
 		//渲染导入的模型
 		if (m_modelImported && m_modelImported->isLoadSuccess())
 		{
-			m_modelImported->draw();
+			m_modelImported->draw(m_shaderModel);
 		}
 
 	}

@@ -1,6 +1,5 @@
 #include "stdafx.h"
 
-
 //Assimp
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -13,6 +12,9 @@
 #include "Vertex.h"
 #include "Model.h"
 #include "Mesh.h"
+#include "Texture.h"
+#include "TextureManager.h"
+#include "Shader.h"
 
 Model::Model(QOpenGLFunctions_4_3_Core* glFuncs, QString fileName):
 	m_glFuncs(glFuncs)
@@ -30,11 +32,11 @@ Model::~Model()
 	QVector<Mesh*>().swap(m_meshes);
 }
 
-void Model::draw()
+void Model::draw(Shader* shader)
 {
 	for (int i=0; i<m_meshes.size(); i++)
 	{
-		m_meshes[i]->draw();
+		m_meshes[i]->draw(shader);
 	}
 }
 
@@ -104,6 +106,7 @@ Mesh* Model::processMesh(aiMesh* mesh, const aiScene* scene)
 {
 	QVector<Vertex> vertices;
 	QVector<GLuint> indices;
+	QVector<Texture> textures;
 
 	Vertex vertex;
 	for (int i = 0; i < mesh->mNumVertices; i++)
@@ -136,10 +139,9 @@ Mesh* Model::processMesh(aiMesh* mesh, const aiScene* scene)
 				texCoord.x = mesh->mTextureCoords[0][i].x;
 				texCoord.y = mesh->mTextureCoords[0][i].y;
 
-				vertex.m_textureCoord = texCoord;
+				vertex.m_texCoord = texCoord;
 			}
 		}
-
 
 		vertices.push_back(vertex);
 	}
@@ -155,5 +157,50 @@ Mesh* Model::processMesh(aiMesh* mesh, const aiScene* scene)
 		}
 	}
 
-	return new Mesh(m_glFuncs, vertices, indices);
+
+	//解析材质
+	Material material;
+	if (mesh->mMaterialIndex >= 0)
+	{
+		aiMaterial* aiMaterial = scene->mMaterials[mesh->mMaterialIndex];
+
+		//获取材质颜色信息
+		aiColor3D color;
+		aiMaterial->Get(AI_MATKEY_COLOR_AMBIENT, color);
+		material.Ka = glm::vec4(color.r, color.g, color.b, 1.0);
+		aiMaterial->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+		material.Kd = glm::vec4(color.r, color.g, color.b, 1.0);
+		aiMaterial->Get(AI_MATKEY_COLOR_SPECULAR, color);
+		material.Ks = glm::vec4(color.r, color.g, color.b, 1.0);
+
+		//加载diffuse贴图
+		QVector<Texture> vecTexDiffuse = loadMaterialTextures(aiMaterial, aiTextureType_DIFFUSE, TEXTURE_DIFFUSE_STR);
+		textures.append(vecTexDiffuse);
+
+		//加载specular贴图
+		QVector<Texture> vecTexSpecular = loadMaterialTextures(aiMaterial, aiTextureType_SPECULAR, TEXTURE_SPECULAR_STR);
+		textures.append(vecTexSpecular);
+	}
+
+	return new Mesh(m_glFuncs, vertices, indices, textures, material);
+}
+
+QVector<Texture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType type, QString typeName)
+{
+	QVector<Texture> vecTexture;
+
+	for (uint i = 0; i < mat->GetTextureCount(type); i++)
+	{
+		Texture tex;
+		aiString path;
+		mat->GetTexture(type, i, &path);
+
+		tex.id = TextureManager::getInstance()->createTexture(path.C_Str(), m_glFuncs);
+		tex.path = path.C_Str();
+		tex.type = typeName;
+
+		vecTexture.push_back(tex);
+	}
+
+	return vecTexture;
 }

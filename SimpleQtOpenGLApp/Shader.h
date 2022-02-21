@@ -30,5 +30,6 @@ public:
 	void setVec4(const char* _name, glm::vec4 _vec4)const;
 	void setFloat(const char* _name, float _f)const;
 	void setInt(const char* _name, int _i)const;
+	void setBool(const char* _name, bool val)const;
 };
 

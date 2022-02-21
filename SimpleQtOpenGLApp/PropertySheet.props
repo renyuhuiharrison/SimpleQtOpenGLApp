@@ -5,6 +5,7 @@
     <ASSIMP_LIB>C:\Assimp\lib</ASSIMP_LIB>
     <ASSIMP_INC>C:\Assimp\include</ASSIMP_INC>
     <GLM_INC>D:\Dev\OpenGL\glm-install\include</GLM_INC>
+    <STB_INC>D:\Projects\SimpleQtOpenGLApp\SimpleQtOpenGLApp\3rdparty\include\stb</STB_INC>
   </PropertyGroup>
   <PropertyGroup />
   <ItemDefinitionGroup />
@@ -17,6 +18,9 @@
     </BuildMacro>
     <BuildMacro Include="GLM_INC">
       <Value>$(GLM_INC)</Value>
+    </BuildMacro>
+    <BuildMacro Include="STB_INC">
+      <Value>$(STB_INC)</Value>
     </BuildMacro>
   </ItemGroup>
 </Project>
