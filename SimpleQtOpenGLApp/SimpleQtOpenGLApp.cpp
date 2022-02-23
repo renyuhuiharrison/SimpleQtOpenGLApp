@@ -41,6 +41,13 @@ void SimpleQtOpenGLApp::initActions()
 		}
 	);
 
+	//模型高亮
+	connect(ui.actionModelHighlight, &QAction::changed, [=]()
+		{
+			ui.openglWidget->setModelHighlight(ui.actionModelHighlight->isChecked());
+		}
+	);
+
 	//清空场景
 	connect(ui.actionClearScene, &QAction::triggered, [=]()
 		{

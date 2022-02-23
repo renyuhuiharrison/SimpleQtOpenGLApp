@@ -34,6 +34,8 @@ public:
 
 	void clearScene();
 
+	void setModelHighlight(bool val);
+
 protected:
 	//Sets up the OpenGL resources and state. 
 	//Gets called once before the first time resizeGL() or paintGL() is called.
@@ -67,17 +69,20 @@ private:
 
 private:
 	//Gouraud shader
-	const QString m_modelVertGouraudShaderFilePath = ":/Shaders/ModelGouraud.vert";
-	const QString m_modelFragGouraudShaderFilePath = ":/Shaders/ModelGouraud.frag";
+	const QString m_modelGouraudVertShaderFilePath = ":/Shaders/ModelGouraud.vert";
+	const QString m_modelGouraudFragShaderFilePath = ":/Shaders/ModelGouraud.frag";
 
 	//Phong shader
-	const QString m_modelVertPhongShaderFilePath = ":/Shaders/ModelPhong.vert";
-	const QString m_modelFragPhongShaderFilePath = ":/Shaders/ModelPhong.frag";
+	const QString m_modelPhongVertShaderFilePath = ":/Shaders/ModelPhong.vert";
+	const QString m_modelPhongFragShaderFilePath = ":/Shaders/ModelPhong.frag";
 
 	const QString m_sunVShaderFilePath = ":/Shaders/SunVertexShader.vert";
 	const QString m_sunFShaderFilePath = ":/Shaders/SunFragmentShader.frag";
 
 	const QString m_modelSunFileRelPath = "/Models/sun.obj";
+
+	const QString m_modelHighlightVertShaderFilePath = ":/Shaders/ModelHighlight.vert";
+	const QString m_modelHighlightFragShaderFilePath = ":/Shaders/ModelHighlight.frag";
 
 	int m_width; //窗口宽度
 	int m_height;  //窗口高度
@@ -86,6 +91,7 @@ private:
 
 	Shader* m_shaderModel;
 	Shader* m_shaderSun;
+	Shader* m_shaderHighlight;
 	QOpenGLFunctions_4_3_Core* m_glFuncs;
 
 	Camera* m_camera;
@@ -97,6 +103,7 @@ private:
 
 	bool	m_bLoadTriangle;
 	bool	m_bLoadSun; //是否加载sun模型
+	bool	m_bModelHighlight; //模型是否高亮
 
 	QVector<Mesh*> m_meshes;
 

@@ -6,5 +6,7 @@
         <file>Shaders/ModelGouraud.vert</file>
         <file>Shaders/ModelPhong.frag</file>
         <file>Shaders/ModelPhong.vert</file>
+        <file>Shaders/ModelHighlight.frag</file>
+        <file>Shaders/ModelHighlight.vert</file>
     </qresource>
 </RCC>

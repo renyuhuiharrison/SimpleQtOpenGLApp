@@ -42,9 +42,11 @@ OpenGLWidget::OpenGLWidget(QWidget*parent) :
 	m_bFirstMouse = true;
 	m_bLoadTriangle = false;
 	m_bLoadSun = false;
+	m_bModelHighlight = false;
 	m_modelImported = nullptr;
 	m_shaderModel = nullptr;
 	m_shaderSun = nullptr;
+	m_shaderHighlight = nullptr;
 
 	m_lightPosition = glm::vec3(0.0f, 0.0f, 0.0f);
 
@@ -79,6 +81,12 @@ OpenGLWidget::~OpenGLWidget()
 		delete m_shaderSun;
 		m_shaderSun = nullptr;
 	}
+
+	if (m_shaderHighlight)
+	{
+		delete m_shaderHighlight;
+		m_shaderHighlight = nullptr;
+	}
 }
 
 void OpenGLWidget::importModel(QString fileName)
@@ -95,6 +103,12 @@ void OpenGLWidget::clearScene()
 	deleteAllMeshes();
 
 	update();
+}
+
+void OpenGLWidget::setModelHighlight(bool val)
+{
+	val ? glEnable(GL_STENCIL_TEST) : glDisable(GL_STENCIL_TEST);
+	m_bModelHighlight = val;
 }
 
 void OpenGLWidget::displayTriangle()
@@ -146,7 +160,12 @@ void OpenGLWidget::initializeGL()
 	loadSun();
 
 	m_shaderModel = new Shader(m_glFuncs);
-	if (!m_shaderModel->initShader(m_modelVertPhongShaderFilePath, m_modelFragPhongShaderFilePath)) {
+	if (!m_shaderModel->initShader(m_modelPhongVertShaderFilePath, m_modelPhongFragShaderFilePath)) {
+		return;
+	}
+
+	m_shaderHighlight = new Shader(m_glFuncs);
+	if (!m_shaderHighlight->initShader(m_modelHighlightVertShaderFilePath, m_modelHighlightFragShaderFilePath)) {
 		return;
 	}
 
@@ -163,14 +182,18 @@ void OpenGLWidget::resizeGL(int w, int h)
 
 void OpenGLWidget::paintGL()
 {
+	//开启深度测试
+	glEnable(GL_DEPTH_TEST);
+
+	//开启模板测试
+	glEnable(GL_STENCIL_TEST);
+	glStencilMask(0xFF);
+
 	//设置清屏颜色
 	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 
 	//清空颜色缓冲区
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	//开启深度测试
-	glEnable(GL_DEPTH_TEST);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	m_camera->update();
 
@@ -188,6 +211,7 @@ void OpenGLWidget::paintGL()
 	//投影矩阵
 	glm::mat4 projMatrix = glm::perspective(glm::radians(45.0f), (float)m_width / (float)m_height, 0.1f, 100.0f);
 
+	glStencilFunc(GL_ALWAYS, 1, 0xFF);
 
 	//渲染太阳
 	if (m_bLoadSun && m_modelSun->isLoadSuccess())
@@ -228,10 +252,6 @@ void OpenGLWidget::paintGL()
 		m_shaderModel->setVec4("light.diffuse", lightDiffuse);
 		m_shaderModel->setVec4("light.specular", lightSpecular);
 		m_shaderModel->setVec3("light.position", m_lightPosView);
-		/*m_shaderModel->setVec4("material.ambient", goldAmbient);
-		m_shaderModel->setVec4("material.diffuse", goldDiffuse);
-		m_shaderModel->setVec4("material.specular", goldSpecular);
-		m_shaderModel->setFloat("material.shininess", goldShiness);*/
 
 		//设置光照衰减系数
 		m_shaderModel->setFloat("light.kc", 1.0f);
@@ -244,12 +264,42 @@ void OpenGLWidget::paintGL()
 			m_meshes[i]->draw(m_shaderModel);
 		}
 
+
 		//渲染导入的模型
 		if (m_modelImported && m_modelImported->isLoadSuccess())
 		{
+			if (m_bModelHighlight)
+			{
+				glStencilFunc(GL_ALWAYS, 1, 0xFF);
+				glStencilMask(0xFF);
+				glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+			}
+
 			m_modelImported->draw(m_shaderModel);
 		}
 
+
+		//绘制高亮边缘
+		if (m_bModelHighlight)
+		{
+			m_shaderHighlight->start();
+			if (m_modelImported && m_modelImported->isLoadSuccess())
+			{
+				glStencilMask(0x00);
+				glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+
+				//将物体缩放至1.05倍
+				modelMatrix = glm::scale(modelMatrix, glm::vec3(1.05f, 1.05f, 1.05f));
+				m_shaderHighlight->setMatrix("modelMatrix", modelMatrix);
+				m_shaderHighlight->setMatrix("viewMatrix", viewMatrix);
+				m_shaderHighlight->setMatrix("projMatrix", projMatrix);
+
+				m_modelImported->draw(m_shaderModel);
+			}
+			m_shaderHighlight->end();
+
+			glStencilFunc(GL_ALWAYS, 1, 0xFF);
+		}
 	}
 	m_shaderModel->end();
 }
