@@ -21,7 +21,9 @@ public:
 	{
 
 	}
-	bool initShader(QString _vertexPath, QString _fragPath);
+
+	uint compileShader(QString _shaderPath, GLint _shaderType);
+	bool initShader(QString _vertexPath, QString _fragPath, QString _geoPath = "");
 	void start();
 	void end();
 

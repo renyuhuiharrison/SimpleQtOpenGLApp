@@ -12,62 +12,70 @@
 #include "Shader.h"
 
 
-bool Shader::initShader(QString _vertexPath, QString _fragPath)
+uint Shader::compileShader(QString _shaderPath, GLint _shaderType)
 {
-	QFile vertexFile(_vertexPath);
-    vertexFile.open(QIODevice::ReadOnly);
-    QString vertexCode = vertexFile.readAll();
 
-	QFile fragFile(_fragPath);
-    fragFile.open(QIODevice::ReadOnly);
-	QString fragCode = fragFile.readAll();
+	QFile shaderFile(_shaderPath);
+    shaderFile.open(QIODevice::ReadOnly);
+	QString shaderCode = shaderFile.readAll();
 
-    std::string stdStrVCode = vertexCode.toStdString();
-    const char* _vShaderStr = stdStrVCode.c_str();
+	std::string stdStrCode = shaderCode.toStdString();
+	const char* _vShaderStr = stdStrCode.c_str();
 
-	std::string stdStrFCode = fragCode.toStdString();
-	const char* _fShaderStr = stdStrFCode.c_str();
+	unsigned int   _shaderID = 0;
+	char           _infoLog[512];
+	int            _successFlag = 0;
 
-    //shaderµÄ±àÒëÁ´½Ó
-    unsigned int   _vertexID = 0, _fragID = 0;
-    char           _infoLog[512];
-    int            _successFlag = 0;
+	//±àÒë
+    _shaderID = m_glFuncs->glCreateShader(_shaderType);
+	m_glFuncs->glShaderSource(_shaderID, 1, &_vShaderStr, NULL);
+	m_glFuncs->glCompileShader(_shaderID);
 
-    //±àÒë
-    _vertexID = m_glFuncs->glCreateShader(GL_VERTEX_SHADER);
-    m_glFuncs->glShaderSource(_vertexID, 1, &_vShaderStr, NULL);
-    m_glFuncs->glCompileShader(_vertexID);
-
-    m_glFuncs->glGetShaderiv(_vertexID, GL_COMPILE_STATUS, &_successFlag);
-    if (!_successFlag)
-    {
-        m_glFuncs->glGetShaderInfoLog(_vertexID, 512, NULL, _infoLog);
-        QString errStr(_infoLog);
-        qDebug() << errStr;
-
-		return false;
+	m_glFuncs->glGetShaderiv(_shaderID, GL_COMPILE_STATUS, &_successFlag);
+	if (!_successFlag)
+	{
+		m_glFuncs->glGetShaderInfoLog(_shaderID, 512, NULL, _infoLog);
+		QString errStr(_infoLog);
+		qDebug() << errStr;
 	}
 
-    _fragID = m_glFuncs->glCreateShader(GL_FRAGMENT_SHADER);
-    m_glFuncs->glShaderSource(_fragID, 1, &_fShaderStr, NULL);
-    m_glFuncs->glCompileShader(_fragID);
 
-    m_glFuncs->glGetShaderiv(_fragID, GL_COMPILE_STATUS, &_successFlag);
-    if (!_successFlag)
-    {
-        m_glFuncs->glGetShaderInfoLog(_fragID, 512, NULL, _infoLog);
-        QString errStr(_infoLog);
-        qDebug() << errStr;
+	return _shaderID;
+}
 
-        return false;
-    }
+bool Shader::initShader(QString _vertexPath, QString _fragPath, QString _geoPath)
+{
+	unsigned int _vertexID = -1;
+	unsigned int _fragID = -1;
+	unsigned int _geoID = -1;
+
+	//±àÒë
+	_vertexID = compileShader(_vertexPath, GL_VERTEX_SHADER);
+	_fragID = compileShader(_fragPath, GL_FRAGMENT_SHADER);
+	if (!_geoPath.isEmpty()) {
+		_geoID = compileShader(_geoPath, GL_GEOMETRY_SHADER);
+	}
+	
+	char           _infoLog[512];
+	int            _successFlag = 0;
 
     //Á´½Ó
-    m_shaderProgram = m_glFuncs->glCreateProgram();
-    m_glFuncs->glAttachShader(m_shaderProgram, _vertexID);
-    m_glFuncs->glAttachShader(m_shaderProgram, _fragID);
-    m_glFuncs->glLinkProgram(m_shaderProgram);
+	m_shaderProgram = m_glFuncs->glCreateProgram();
+	if (_vertexID != -1)
+	{
+		m_glFuncs->glAttachShader(m_shaderProgram, _vertexID);
+	}
+	if (_fragID != -1)
+	{
+		m_glFuncs->glAttachShader(m_shaderProgram, _fragID);
+	}
+	if (_geoID != -1)
+	{
+		m_glFuncs->glAttachShader(m_shaderProgram, _geoID);
+	}
+	m_glFuncs->glLinkProgram(m_shaderProgram);
 
+	//»ñÈ¡shaderÁ´½Ó×´Ì¬
     m_glFuncs->glGetProgramiv(m_shaderProgram, GL_LINK_STATUS, &_successFlag);
     if (!_successFlag)
     {
@@ -77,8 +85,12 @@ bool Shader::initShader(QString _vertexPath, QString _fragPath)
 
 		return false;
 	}
+
     m_glFuncs->glDeleteShader(_vertexID);
-    m_glFuncs->glDeleteShader(_fragID);
+	m_glFuncs->glDeleteShader(_fragID);
+	if (_geoID != -1) {
+		m_glFuncs->glDeleteShader(_geoID);
+	}
 
 	return true;
 }
