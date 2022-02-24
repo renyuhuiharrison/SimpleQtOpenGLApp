@@ -185,6 +185,9 @@ void OpenGLWidget::paintGL()
 	//开启深度测试
 	glEnable(GL_DEPTH_TEST);
 
+	//开启背面剔除
+	glEnable(GL_CULL_FACE);
+
 	//开启模板测试
 	glEnable(GL_STENCIL_TEST);
 	glStencilMask(0xFF);
