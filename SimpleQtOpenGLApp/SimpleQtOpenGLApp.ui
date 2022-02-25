@@ -36,6 +36,7 @@
     <addaction name="actionDisplayTriangle"/>
     <addaction name="actionImportModel"/>
     <addaction name="actionModelHighlight"/>
+    <addaction name="actionDisplayVertexNormal"/>
     <addaction name="actionClearScene"/>
    </widget>
    <addaction name="menu"/>
@@ -70,6 +71,14 @@
    </property>
    <property name="text">
     <string>模型高亮</string>
+   </property>
+  </action>
+  <action name="actionDisplayVertexNormal">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>显示顶点法线</string>
    </property>
   </action>
  </widget>

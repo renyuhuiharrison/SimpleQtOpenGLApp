@@ -48,6 +48,13 @@ void SimpleQtOpenGLApp::initActions()
 		}
 	);
 
+	//显示顶点法线
+	connect(ui.actionDisplayVertexNormal, &QAction::changed, [=]()
+		{
+			ui.openglWidget->setVertexNormalVisible(ui.actionDisplayVertexNormal->isChecked());
+		}
+
+	);
 	//清空场景
 	connect(ui.actionClearScene, &QAction::triggered, [=]()
 		{

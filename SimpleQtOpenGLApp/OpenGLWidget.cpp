@@ -43,10 +43,13 @@ OpenGLWidget::OpenGLWidget(QWidget*parent) :
 	m_bLoadTriangle = false;
 	m_bLoadSun = false;
 	m_bModelHighlight = false;
+	m_bVertexNormal = false;
+
 	m_modelImported = nullptr;
 	m_shaderModel = nullptr;
 	m_shaderSun = nullptr;
 	m_shaderHighlight = nullptr;
+	m_shaderVertexNormal = nullptr;
 
 	m_lightPosition = glm::vec3(0.0f, 0.0f, 0.0f);
 
@@ -87,6 +90,12 @@ OpenGLWidget::~OpenGLWidget()
 		delete m_shaderHighlight;
 		m_shaderHighlight = nullptr;
 	}
+
+	if (m_shaderVertexNormal)
+	{
+		delete m_shaderVertexNormal;
+		m_shaderVertexNormal = nullptr;
+	}
 }
 
 void OpenGLWidget::importModel(QString fileName)
@@ -109,6 +118,24 @@ void OpenGLWidget::setModelHighlight(bool val)
 {
 	val ? glEnable(GL_STENCIL_TEST) : glDisable(GL_STENCIL_TEST);
 	m_bModelHighlight = val;
+}
+
+void OpenGLWidget::setVertexNormalVisible(bool val)
+{
+	if (m_modelImported && m_modelImported->isLoadSuccess())
+	{
+		if (!m_shaderVertexNormal) {
+			m_shaderVertexNormal = new Shader(m_glFuncs);
+			if (!m_shaderVertexNormal->initShader(m_vertNormalVertShaderPath,
+				m_vertNormalFragShaderPath,
+				m_vertNormalGeoShaderPath)) {
+				return;
+			}
+		}
+
+		m_bVertexNormal = val;
+
+	}
 }
 
 void OpenGLWidget::displayTriangle()
@@ -160,12 +187,12 @@ void OpenGLWidget::initializeGL()
 	loadSun();
 
 	m_shaderModel = new Shader(m_glFuncs);
-	if (!m_shaderModel->initShader(m_modelPhongVertShaderFilePath, m_modelPhongFragShaderFilePath)) {
+	if (!m_shaderModel->initShader(m_modelPhongVertShaderPath, m_modelPhongFragShaderPath)) {
 		return;
 	}
 
 	m_shaderHighlight = new Shader(m_glFuncs);
-	if (!m_shaderHighlight->initShader(m_modelHighlightVertShaderFilePath, m_modelHighlightFragShaderFilePath)) {
+	if (!m_shaderHighlight->initShader(m_modelHighlightVertShaderPath, m_modelHighlightFragShaderPath)) {
 		return;
 	}
 
@@ -238,39 +265,39 @@ void OpenGLWidget::paintGL()
 	glm::vec3 viewPosition = m_camera->getPosition();
 
 	//渲染模型
-	m_shaderModel->start();
+	if (m_modelImported && m_modelImported->isLoadSuccess())
 	{
-		//设置模型-视图-投影矩阵
-		m_shaderModel->setMatrix("modelMatrix", modelMatrix);
-		m_shaderModel->setMatrix("viewMatrix", viewMatrix);
-		m_shaderModel->setMatrix("projMatrix", projMatrix);
-		m_shaderModel->setMatrix("normalMatrix", invTrMatrix);
-		m_shaderModel->setVec3("viewPosition", viewPosition);
-
-		//设置光照
-		m_lightPosView = glm::vec3(viewMatrix * glm::vec4(m_lightPosition, 1.0));
-
-		m_shaderModel->setVec4("globalAmbient", globalAmbient);
-		m_shaderModel->setVec4("light.ambient", lightAmbient);
-		m_shaderModel->setVec4("light.diffuse", lightDiffuse);
-		m_shaderModel->setVec4("light.specular", lightSpecular);
-		m_shaderModel->setVec3("light.position", m_lightPosView);
-
-		//设置光照衰减系数
-		m_shaderModel->setFloat("light.kc", 1.0f);
-		m_shaderModel->setFloat("light.kl", 0.09f);
-		m_shaderModel->setFloat("light.kq", 0.032f);
-
-		//渲染网格
-		for (int i = 0; i < m_meshes.size(); i++)
+		m_shaderModel->start();
 		{
-			m_meshes[i]->draw(m_shaderModel);
-		}
+			//设置模型-视图-投影矩阵
+			m_shaderModel->setMatrix("modelMatrix", modelMatrix);
+			m_shaderModel->setMatrix("viewMatrix", viewMatrix);
+			m_shaderModel->setMatrix("projMatrix", projMatrix);
+			m_shaderModel->setMatrix("normalMatrix", invTrMatrix);
+			m_shaderModel->setVec3("viewPosition", viewPosition);
+
+			//设置光照
+			m_lightPosView = glm::vec3(viewMatrix * glm::vec4(m_lightPosition, 1.0));
+
+			m_shaderModel->setVec4("globalAmbient", globalAmbient);
+			m_shaderModel->setVec4("light.ambient", lightAmbient);
+			m_shaderModel->setVec4("light.diffuse", lightDiffuse);
+			m_shaderModel->setVec4("light.specular", lightSpecular);
+			m_shaderModel->setVec3("light.position", m_lightPosView);
+
+			//设置光照衰减系数
+			m_shaderModel->setFloat("light.kc", 1.0f);
+			m_shaderModel->setFloat("light.kl", 0.09f);
+			m_shaderModel->setFloat("light.kq", 0.032f);
+
+			//渲染网格
+			for (int i = 0; i < m_meshes.size(); i++)
+			{
+				m_meshes[i]->draw(m_shaderModel);
+			}
 
 
-		//渲染导入的模型
-		if (m_modelImported && m_modelImported->isLoadSuccess())
-		{
+			//渲染导入的模型
 			if (m_bModelHighlight)
 			{
 				glStencilFunc(GL_ALWAYS, 1, 0xFF);
@@ -279,32 +306,47 @@ void OpenGLWidget::paintGL()
 			}
 
 			m_modelImported->draw(m_shaderModel);
-		}
 
 
-		//绘制高亮边缘
-		if (m_bModelHighlight)
-		{
-			m_shaderHighlight->start();
-			if (m_modelImported && m_modelImported->isLoadSuccess())
+			//绘制高亮边缘
+			if (m_bModelHighlight)
 			{
-				glStencilMask(0x00);
-				glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+				m_shaderHighlight->start();
+				{
+					glStencilMask(0x00);
+					glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
 
-				//将物体缩放至1.05倍
-				modelMatrix = glm::scale(modelMatrix, glm::vec3(1.05f, 1.05f, 1.05f));
-				m_shaderHighlight->setMatrix("modelMatrix", modelMatrix);
-				m_shaderHighlight->setMatrix("viewMatrix", viewMatrix);
-				m_shaderHighlight->setMatrix("projMatrix", projMatrix);
+					//将物体缩放至1.05倍
+					modelMatrix = glm::scale(modelMatrix, glm::vec3(1.05f, 1.05f, 1.05f));
+					m_shaderHighlight->setMatrix("modelMatrix", modelMatrix);
+					m_shaderHighlight->setMatrix("viewMatrix", viewMatrix);
+					m_shaderHighlight->setMatrix("projMatrix", projMatrix);
 
-				m_modelImported->draw(m_shaderModel);
+					m_modelImported->draw(m_shaderModel);
+				}
+				m_shaderHighlight->end();
+
+				glStencilFunc(GL_ALWAYS, 1, 0xFF);
 			}
-			m_shaderHighlight->end();
-
-			glStencilFunc(GL_ALWAYS, 1, 0xFF);
 		}
+		m_shaderModel->end();
 	}
-	m_shaderModel->end();
+
+
+	//绘制法线
+	if (m_bVertexNormal)
+	{
+		m_shaderVertexNormal->start();
+		{
+			m_shaderVertexNormal->setMatrix("modelMatrix", modelMatrix);
+			m_shaderVertexNormal->setMatrix("viewMatrix", viewMatrix);
+			m_shaderVertexNormal->setMatrix("projMatrix", projMatrix);
+
+			m_modelImported->draw(m_shaderVertexNormal);
+		}
+
+		m_shaderVertexNormal->end();
+	}
 }
 
 void OpenGLWidget::keyPressEvent(QKeyEvent* event)
@@ -539,13 +581,13 @@ void OpenGLWidget::deleteModel()
 
 void OpenGLWidget::loadSun()
 {
-	QString sunFilePath = m_appDirPathName + m_modelSunFileRelPath;
+	QString sunFilePath = m_appDirPathName + m_modelSunRelPath;
 
 	m_modelSun = new Model(m_glFuncs, sunFilePath);
 
 	m_shaderSun = new Shader(m_glFuncs);
 
-	if (!m_shaderSun->initShader(m_sunVShaderFilePath, m_sunFShaderFilePath)) {
+	if (!m_shaderSun->initShader(m_sunVShaderPath, m_sunFShaderPath)) {
 		return;
 	}
 
