@@ -209,15 +209,15 @@ void OpenGLWidget::resizeGL(int w, int h)
 
 void OpenGLWidget::paintGL()
 {
-	//开启深度测试
-	glEnable(GL_DEPTH_TEST);
-
 	//开启背面剔除
 	glEnable(GL_CULL_FACE);
 
 	//开启模板测试
 	glEnable(GL_STENCIL_TEST);
 	glStencilMask(0xFF);
+
+	//开启深度测试
+	glEnable(GL_DEPTH_TEST);
 
 	//设置清屏颜色
 	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
@@ -314,6 +314,7 @@ void OpenGLWidget::paintGL()
 				m_shaderHighlight->start();
 				{
 					glStencilMask(0x00);
+					glDisable(GL_DEPTH_TEST);
 					glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
 
 					//将物体缩放至1.05倍
