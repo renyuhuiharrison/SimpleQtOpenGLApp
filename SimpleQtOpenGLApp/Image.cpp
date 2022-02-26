@@ -41,6 +41,7 @@ Image* Image::readFromFile(const char* _fileName)
 	int			_height = 0;
 
 	//stbimage读入的图片是反过来的
+	//这是因为OpenGL期待原点（0,0）位于左下角，而通常一张图片的原点位于左上角。
 	stbi_set_flip_vertically_on_load(true);
 
 	unsigned char* bits = stbi_load(_fileName, &_width, &_height, &_picType, STBI_rgb_alpha);

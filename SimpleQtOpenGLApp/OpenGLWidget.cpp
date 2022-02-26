@@ -15,9 +15,9 @@
 
 //°×¹â
 glm::vec4 globalAmbient(0.7f, 0.7f, 0.7f, 1.0f);
-glm::vec4 lightAmbient(0.0f, 0.0f, 0.0f, 1.0f);
-glm::vec4 lightDiffuse(1.0f, 1.0f, 1.0f, 1.0f);
-glm::vec4 lightSpecular(0.5f, 0.5f, 0.5f, 1.0f);
+glm::vec4 lightAmbient(0.2f, 0.2f, 0.2f, 1.0f);
+glm::vec4 lightDiffuse(0.5f, 0.5f, 0.5f, 1.0f);
+glm::vec4 lightSpecular(1.0f, 1.0f, 1.0f, 1.0f);
 
 //»Æ½ð²ÄÖÊ
 //glm::vec4 goldAmbient(0.2473f, 0.1995f, 0.0745f, 1.0f);

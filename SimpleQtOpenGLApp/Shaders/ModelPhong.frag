@@ -64,7 +64,7 @@ void main()
     float attenuation = 1.0f / (light.kc + light.kl * dis + light.kq * dis* dis);
 
 	//按像素计算ADS分量，并合并以构建输出颜色
-	vec3 ambient = ((globalAmbient * Ambient) + (light.ambient * Ambient)).xyz;
+	vec3 ambient = (light.ambient * Ambient).xyz;
 	vec3 diffuse = (light.diffuse.xyz * Diffuse.xyz) * max(cosTheta, 0.0);
 	vec3 specular = light.specular.xyz * Specular.xyz * pow(max(cosPhi, 0.0), 4);
 
